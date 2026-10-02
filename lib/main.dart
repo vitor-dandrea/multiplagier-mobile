@@ -8,6 +8,7 @@ import 'core/security/password_hasher.dart';
 import 'core/session/session_store.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/catalog_repository.dart';
 import 'features/auth/auth_controller.dart';
 
 Future<void> main() async {
@@ -34,5 +35,10 @@ Future<void> main() async {
   );
   await authController.restoreSession();
 
-  runApp(MultiplagierApp(authController: authController));
+  runApp(
+    MultiplagierApp(
+      authController: authController,
+      catalogRepository: SqliteCatalogRepository(database),
+    ),
+  );
 }

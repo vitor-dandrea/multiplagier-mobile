@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/app.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 
+import 'support/fake_catalog.dart';
 import 'support/fakes.dart';
 
 void main() {
@@ -17,8 +18,13 @@ void main() {
     );
   });
 
+  Widget buildApp() => MultiplagierApp(
+        authController: controller,
+        catalogRepository: FakeCatalogRepository(),
+      );
+
   Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(MultiplagierApp(authController: controller));
+    await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
   }
 
@@ -28,17 +34,18 @@ void main() {
 
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
     expect(find.byKey(const Key('home_greeting')), findsNothing);
+    expect(find.byKey(const Key('catalog_list')), findsNothing);
   });
 
   testWidgets('antes de restaurar a sessão, exibe indicador de carregamento',
       (tester) async {
-    await tester.pumpWidget(MultiplagierApp(authController: controller));
+    await tester.pumpWidget(buildApp());
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byKey(const Key('login_submit')), findsNothing);
   });
 
-  testWidgets('fluxo completo: login, área autenticada e logout',
+  testWidgets('fluxo completo: login, catálogo, detalhe e logout',
       (tester) async {
     await controller.restoreSession();
     await pumpApp(tester);
@@ -54,24 +61,37 @@ void main() {
     await tester.tap(find.byKey(const Key('login_submit')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('home_greeting')), findsOneWidget);
+    // Catálogo
     expect(find.text('Olá, Cliente Demo'), findsOneWidget);
+    expect(find.byKey(const Key('catalog_list')), findsOneWidget);
+    expect(find.text('Fone Bluetooth'), findsOneWidget);
     expect(session.id, FakeAuthRepository.user.id);
 
+    // Detalhe
+    await tester.tap(find.byKey(const Key('product_tile_1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('detail_name')), findsOneWidget);
+    expect(find.byKey(const Key('detail_description')), findsOneWidget);
+
+    // Volta para o catálogo
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('catalog_list')), findsOneWidget);
+
+    // Logout
     await tester.tap(find.byKey(const Key('logout_button')));
     await tester.pumpAndSettle();
-
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
-    expect(find.byKey(const Key('home_greeting')), findsNothing);
+    expect(find.byKey(const Key('catalog_list')), findsNothing);
     expect(session.id, isNull);
   });
 
-  testWidgets('sessão salva leva direto à área autenticada', (tester) async {
+  testWidgets('sessão salva leva direto ao catálogo', (tester) async {
     session.id = FakeAuthRepository.user.id;
     await controller.restoreSession();
     await pumpApp(tester);
 
-    expect(find.byKey(const Key('home_greeting')), findsOneWidget);
+    expect(find.byKey(const Key('catalog_list')), findsOneWidget);
     expect(find.byKey(const Key('login_submit')), findsNothing);
   });
 }
