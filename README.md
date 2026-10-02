@@ -12,7 +12,7 @@ MVP em construção. Escopo atual:
 |----------------|--------|
 | Configuração inicial (Flutter + SQLite + seed) | Concluído |
 | Login local (login, logout, restauração de sessão) | Concluído |
-| Catálogo (lista e detalhe) | Não iniciado |
+| Catálogo (lista e detalhe de produtos ativos) | Concluído |
 | Cadastro, carrinho, pedidos, sincronização com API | Não iniciado |
 
 ## Stack
