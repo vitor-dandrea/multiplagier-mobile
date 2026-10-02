@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
+import 'features/auth/auth_controller.dart';
+import 'features/auth/auth_gate.dart';
+import 'features/home/home_page.dart';
 
 class MultiplagierApp extends StatelessWidget {
-  const MultiplagierApp({super.key});
+  const MultiplagierApp({super.key, required this.authController});
+
+  final AuthController authController;
 
   @override
   Widget build(BuildContext context) {
@@ -11,10 +16,10 @@ class MultiplagierApp extends StatelessWidget {
       title: 'Multiplagier',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Multiplagier', style: TextStyle(fontSize: 32)),
-        ),
+      home: AuthGate(
+        controller: authController,
+        authenticatedBuilder: (context, user) =>
+            HomePage(user: user, authController: authController),
       ),
     );
   }
