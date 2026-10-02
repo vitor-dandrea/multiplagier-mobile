@@ -9,10 +9,9 @@ enum AuthStatus { unknown, unauthenticated, authenticated }
 /// Estado de autenticação do app (login, logout e restauração da sessão).
 class AuthController extends ChangeNotifier {
   AuthController({
-    required AuthRepository repository,
-    required SessionStore sessionStore,
-  })  : _repository = repository,
-        _sessionStore = sessionStore;
+    required this._repository,
+    required this._sessionStore,
+  });
 
   /// Mensagem genérica: não revela se o e-mail existe.
   static const invalidCredentialsMessage = 'E-mail ou senha inválidos.';
