@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/core/security/password_hasher.dart';
-import 'package:multiplagier_mobile/core/session/session_store.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
 import 'package:multiplagier_mobile/data/models/user.dart';
@@ -8,18 +7,7 @@ import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-class _MemorySessionStore implements SessionStore {
-  int? id;
-
-  @override
-  Future<void> clear() async => id = null;
-
-  @override
-  Future<int?> readUserId() async => id;
-
-  @override
-  Future<void> saveUserId(int value) async => id = value;
-}
+import '../support/fakes.dart';
 
 class _ThrowingRepository implements AuthRepository {
   @override
@@ -34,7 +22,7 @@ void main() {
   sqfliteFfiInit();
 
   late AppDatabase database;
-  late _MemorySessionStore session;
+  late MemorySessionStore session;
   late AuthController controller;
   final hasher = PasswordHasher(iterations: 100);
 
@@ -44,7 +32,7 @@ void main() {
       path: inMemoryDatabasePath,
       hasher: hasher,
     );
-    session = _MemorySessionStore();
+    session = MemorySessionStore();
     controller = AuthController(
       repository: SqliteAuthRepository(database, hasher),
       sessionStore: session,
