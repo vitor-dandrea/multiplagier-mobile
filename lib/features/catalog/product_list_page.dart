@@ -24,11 +24,14 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  late Future<List<Product>> _future = widget.repository.listActiveProducts();
+  late Future<List<Product>> _future = _load();
+
+  // `async` garante que qualquer falha vire erro do Future (e não do build).
+  Future<List<Product>> _load() async => widget.repository.listActiveProducts();
 
   void _reload() {
     setState(() {
-      _future = widget.repository.listActiveProducts();
+      _future = _load();
     });
   }
 
