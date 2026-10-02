@@ -430,7 +430,7 @@ function secaoEvidencias() {
     ["Evidência 2: login recusado", "Resposta a senha incorreta com a mensagem genérica “E-mail ou senha inválidos.”, sem revelar se o e-mail existe.", "Funcionalidade implementada"],
     ["Evidência 3: catálogo", "Lista dos 5 produtos ativos lidos do SQLite após o login; o produto inativo semeado não aparece.", "Funcionalidade implementada"],
     ["Evidência 4: detalhe", "Detalhe de um produto com nome, preço, disponibilidade e descrição.", "Funcionalidade implementada"],
-    ["Repositório e histórico", "Código-fonte, commits atômicos e 3 pull requests (scaffold, login, catálogo) integrados na branch dev.", "Registro do trabalho"],
+    ["Repositório e histórico", "Código-fonte, commits atômicos e 4 pull requests (scaffold, login, catálogo e este relatório) integrados na branch dev.", "Registro do trabalho"],
     ["Resultado dos testes", `flutter test: ${TESTES_TOTAL} testes passando (34 unitários, 20 de widget e 1 de fluxo ponta a ponta com SQLite real); flutter analyze: sem problemas.`, "Verificação automatizada"],
   ];
 
