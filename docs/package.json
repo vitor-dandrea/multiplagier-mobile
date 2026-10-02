@@ -1,0 +1,12 @@
+{
+  "name": "multiplagier-mobile-docs",
+  "private": true,
+  "type": "module",
+  "description": "Gera o relatório de status em Word (docx)",
+  "scripts": {
+    "relatorio": "node gerar-relatorio-status.mjs"
+  },
+  "dependencies": {
+    "docx": "^9.8.1"
+  }
+}

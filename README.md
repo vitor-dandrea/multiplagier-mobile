@@ -57,6 +57,11 @@ lib/
   features/            # auth e catalog (por funcionalidade)
 ```
 
+## Relatório de status e evidências
+
+- Relatório em Word: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (gerado por `docs/gerar-relatorio-status.mjs`; use `cd docs && npm install && npm run relatorio`).
+- Capturas de tela em `docs/evidencias/`, geradas por `flutter test tool/screenshots/capture_screens_test.dart` (renderização do app via teste de widget, não é print de emulador).
+
 ## Fluxo de Git
 
 - `main`: branch estável, **não recebe commits de trabalho nesta fase**.
