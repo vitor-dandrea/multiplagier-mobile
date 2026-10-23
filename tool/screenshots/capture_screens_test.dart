@@ -126,6 +126,15 @@ void main() {
     // 1. Login vazio
     await capture('01-login');
 
+    // 5. Cadastro (antes de preencher o login, para voltar à tela limpa)
+    await tester.ensureVisible(find.byKey(const Key('login_create_account')));
+    await tester.tap(find.byKey(const Key('login_create_account')));
+    await _pumpUntilFound(tester, find.byKey(const Key('register_name')));
+    await capture('05-cadastro');
+    await tester.ensureVisible(find.byKey(const Key('register_go_to_login')));
+    await tester.tap(find.byKey(const Key('register_go_to_login')));
+    await _pumpUntilFound(tester, find.byKey(const Key('login_submit')));
+
     // 2. Login com credenciais inválidas
     await tester.enterText(find.byKey(const Key('login_email')), demoUserEmail);
     await tester.enterText(
@@ -149,7 +158,30 @@ void main() {
     await tester.tap(find.byKey(const Key('product_tile_1')));
     await tester.pump();
     await _pumpUntilFound(tester, find.byKey(const Key('detail_name')));
+    await tester.pump(const Duration(milliseconds: 400));
     await capture('04-detalhe');
+
+    // 6. Carrinho com a Smart TV
+    await tester.ensureVisible(find.byKey(const Key('add_to_cart')));
+    await tester.tap(find.byKey(const Key('add_to_cart')));
+    await _pumpUntilFound(tester, find.byKey(const Key('add_to_cart_feedback')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pageBack();
+    await tester.pump(const Duration(milliseconds: 500));
+    await _pumpUntilFound(tester, find.byKey(const Key('cart_button')));
+    await tester.tap(find.byKey(const Key('cart_button')));
+    await _pumpUntilFound(tester, find.byKey(const Key('cart_list')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await capture('06-carrinho');
+
+    // 7. Pedido confirmado
+    await tester.ensureVisible(find.byKey(const Key('cart_checkout')));
+    await tester.tap(find.byKey(const Key('cart_checkout')));
+    await _pumpUntilFound(tester, find.byKey(const Key('confirm_order')));
+    await tester.tap(find.byKey(const Key('confirm_order')));
+    await _pumpUntilFound(tester, find.byKey(const Key('order_status')));
+    await tester.pump(const Duration(milliseconds: 500));
+    await capture('07-pedido');
 
     await tester.runAsync(() => database.close());
   });

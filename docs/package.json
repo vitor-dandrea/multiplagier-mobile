@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Gera o relatório de status em Word (docx)",
   "scripts": {
-    "relatorio": "node gerar-relatorio-status.mjs"
+    "relatorio": "node gerar-relatorio-status.mjs",
+    "relatorio:23-10": "node gerar-relatorios-23-10.mjs"
   },
   "dependencies": {
     "docx": "^9.8.1"

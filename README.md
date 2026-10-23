@@ -64,7 +64,9 @@ lib/
 
 ## Relatório de status e evidências
 
-- Relatório em Word: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (gerado por `docs/gerar-relatorio-status.mjs`; use `cd docs && npm install && npm run relatorio`).
+- Relatório de 02/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (`cd docs && npm install && npm run relatorio`).
+- Continuação de 23/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile_23-10-2026.docx`.
+- Relatório de acompanhamento da atividade: `docs/Relatorio_Acompanhamento_23-10-2026.docx` (`npm run relatorio:23-10` gera os dois de 23/10).
 - Capturas de tela em `docs/evidencias/`, geradas por `flutter test tool/screenshots/capture_screens_test.dart` (renderização do app via teste de widget, não é print de emulador).
 
 ## Fluxo de Git
