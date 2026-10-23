@@ -36,6 +36,7 @@ void main() {
       find.text('Headphone sem fio com 30 horas de bateria.'),
       findsOneWidget,
     );
+    expect(find.byKey(const Key('add_to_cart')), findsNothing);
   });
 
   testWidgets('produto sem estoque aparece como indisponível', (tester) async {
@@ -52,16 +53,18 @@ void main() {
   });
 
   testWidgets('produto inativo é tratado como não encontrado', (tester) async {
-    final repository = FakeCatalogRepository(products: const [
-      Product(
-        id: 5,
-        name: 'Oculto',
-        description: 'x',
-        priceCents: 100,
-        stock: 1,
-        isActive: false,
-      ),
-    ]);
+    final repository = FakeCatalogRepository(
+      products: const [
+        Product(
+          id: 5,
+          name: 'Oculto',
+          description: 'x',
+          priceCents: 100,
+          stock: 1,
+          isActive: false,
+        ),
+      ],
+    );
 
     await pumpDetail(tester, repository, 5);
 
@@ -69,11 +72,91 @@ void main() {
     expect(find.text('Oculto'), findsNothing);
   });
 
-  testWidgets('erro mostra mensagem genérica sem vazar detalhes',
-      (tester) async {
+  testWidgets('erro mostra mensagem genérica sem vazar detalhes', (
+    tester,
+  ) async {
     await pumpDetail(tester, _FailingRepository(), 1);
 
     expect(find.byKey(const Key('detail_error')), findsOneWidget);
     expect(find.textContaining('sensível'), findsNothing);
+  });
+
+  testWidgets('adicionar ao carrinho confirma e informa a falha', (
+    tester,
+  ) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductDetailPage(
+          repository: FakeCatalogRepository(),
+          productId: 1,
+          onAddToCart: () async {
+            calls++;
+            return calls == 1
+                ? null
+                : 'Quantidade maior que o estoque disponível.';
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_to_cart')));
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(find.text(ProductDetailPage.addedMessage), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('add_to_cart')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Quantidade maior que o estoque disponível.'),
+      findsOneWidget,
+    );
+    expect(find.text(ProductDetailPage.addedMessage), findsNothing);
+  });
+
+  testWidgets('produto sem estoque não dispara a inclusão', (tester) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductDetailPage(
+          repository: FakeCatalogRepository(),
+          productId: 2,
+          onAddToCart: () async {
+            calls++;
+            return null;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(
+      find.byKey(const Key('add_to_cart')),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.text('Indisponível'), findsWidgets);
+    expect(calls, 0);
+  });
+
+  testWidgets('falha inesperada ao adicionar não vaza detalhes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductDetailPage(
+          repository: FakeCatalogRepository(),
+          productId: 1,
+          onAddToCart: () => throw StateError('token=segredo'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_to_cart')));
+    await tester.pumpAndSettle();
+
+    expect(find.text(ProductDetailPage.addErrorMessage), findsOneWidget);
+    expect(find.textContaining('segredo'), findsNothing);
   });
 }

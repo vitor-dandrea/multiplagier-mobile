@@ -13,7 +13,10 @@ MVP em construção. Escopo atual:
 | Configuração inicial (Flutter + SQLite + seed) | Concluído |
 | Login local (login, logout, restauração de sessão) | Concluído |
 | Catálogo (lista e detalhe de produtos ativos) | Concluído |
-| Cadastro, carrinho, pedidos, sincronização com API | Não iniciado |
+| Cadastro de cliente (US-001) | Concluído |
+| Carrinho local | Concluído |
+| Pedidos do cliente (US-006, US-007, SEC-001) | Concluído |
+| Sincronização com API | Não iniciado |
 
 ## Stack
 
@@ -46,15 +49,17 @@ O banco é criado e populado na primeira execução.
 
 São semeados 5 produtos ativos e 1 inativo (usado para provar o filtro do catálogo).
 
+Novas contas são criadas em **Criar conta**. A senha precisa ter pelo menos 8 caracteres, com letras e números, e fica armazenada só como hash. Depois do cadastro a sessão já entra no catálogo. Carrinho e pedidos ficam no SQLite, separados por usuário.
+
 ## Arquitetura
 
 ```text
 lib/
   main.dart            # bootstrap (factory SQLite por plataforma)
   app.dart             # MaterialApp
-  core/                # tema e segurança (hash de senha)
+  core/                # tema, validação, formato e segurança (hash de senha)
   data/db/             # AppDatabase, schema e seed
-  features/            # auth e catalog (por funcionalidade)
+  features/            # auth, catalog, cart e orders (por funcionalidade)
 ```
 
 ## Relatório de status e evidências

@@ -9,7 +9,6 @@
 // Observação: não é um print de emulador; é a renderização do app via
 // flutter_test. Não faz parte da suíte regular (`flutter test` não a executa).
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -22,7 +21,9 @@ import 'package:multiplagier_mobile/core/session/session_store.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
+import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/catalog_repository.dart';
+import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -43,7 +44,9 @@ void _loadFont(String family, List<String> files) {
   final loader = FontLoader(family);
   for (final file in files) {
     final bytes = File('$_fontsDir/$file').readAsBytesSync();
-    loader.addFont(Future.value(ByteData.view(Uint8List.fromList(bytes).buffer)));
+    loader.addFont(
+      Future.value(ByteData.view(Uint8List.fromList(bytes).buffer)),
+    );
   }
   loader.load();
 }
@@ -63,7 +66,12 @@ void main() {
   sqfliteFfiInit();
 
   testWidgets('captura telas de evidência', (tester) async {
-    _loadFont('Roboto', ['roboto-regular.ttf', 'roboto-medium.ttf', 'roboto-bold.ttf', 'roboto-black.ttf']);
+    _loadFont('Roboto', [
+      'roboto-regular.ttf',
+      'roboto-medium.ttf',
+      'roboto-bold.ttf',
+      'roboto-black.ttf',
+    ]);
     _loadFont('MaterialIcons', ['materialicons-regular.otf']);
     Directory(_outDir).createSync(recursive: true);
 
@@ -96,6 +104,8 @@ void main() {
         child: MultiplagierApp(
           authController: controller,
           catalogRepository: SqliteCatalogRepository(database),
+          cartRepository: SqliteCartRepository(database),
+          orderRepository: SqliteOrderRepository(database),
         ),
       ),
     );
@@ -104,8 +114,9 @@ void main() {
     Future<void> capture(String name) async {
       await tester.pump(const Duration(milliseconds: 700));
       await tester.runAsync(() async {
-        final boundary = boundaryKey.currentContext!.findRenderObject()!
-            as RenderRepaintBoundary;
+        final boundary =
+            boundaryKey.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
         final image = await boundary.toImage(pixelRatio: 3);
         final data = await image.toByteData(format: ui.ImageByteFormat.png);
         File('$_outDir/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
@@ -117,13 +128,19 @@ void main() {
 
     // 2. Login com credenciais inválidas
     await tester.enterText(find.byKey(const Key('login_email')), demoUserEmail);
-    await tester.enterText(find.byKey(const Key('login_password')), 'senha-errada');
+    await tester.enterText(
+      find.byKey(const Key('login_password')),
+      'senha-errada',
+    );
     await tester.tap(find.byKey(const Key('login_submit')));
     await _pumpUntilFound(tester, find.byKey(const Key('login_error')));
     await capture('02-login-erro');
 
     // 3. Catálogo após login válido
-    await tester.enterText(find.byKey(const Key('login_password')), demoUserPassword);
+    await tester.enterText(
+      find.byKey(const Key('login_password')),
+      demoUserPassword,
+    );
     await tester.tap(find.byKey(const Key('login_submit')));
     await _pumpUntilFound(tester, find.byKey(const Key('catalog_list')));
     await capture('03-catalogo');

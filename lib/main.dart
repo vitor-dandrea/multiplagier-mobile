@@ -8,7 +8,9 @@ import 'core/security/password_hasher.dart';
 import 'core/session/session_store.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/cart_repository.dart';
 import 'data/repositories/catalog_repository.dart';
+import 'data/repositories/order_repository.dart';
 import 'features/auth/auth_controller.dart';
 
 Future<void> main() async {
@@ -39,6 +41,8 @@ Future<void> main() async {
     MultiplagierApp(
       authController: authController,
       catalogRepository: SqliteCatalogRepository(database),
+      cartRepository: SqliteCartRepository(database),
+      orderRepository: SqliteOrderRepository(database),
     ),
   );
 }

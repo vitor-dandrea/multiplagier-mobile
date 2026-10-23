@@ -4,6 +4,7 @@ import 'package:multiplagier_mobile/app.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 
 import 'support/fake_catalog.dart';
+import 'support/fake_commerce.dart';
 import 'support/fakes.dart';
 
 void main() {
@@ -19,9 +20,11 @@ void main() {
   });
 
   Widget buildApp() => MultiplagierApp(
-        authController: controller,
-        catalogRepository: FakeCatalogRepository(),
-      );
+    authController: controller,
+    catalogRepository: FakeCatalogRepository(),
+    cartRepository: FakeCartRepository(),
+    orderRepository: FakeOrderRepository(),
+  );
 
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(buildApp());
@@ -35,18 +38,22 @@ void main() {
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
     expect(find.byKey(const Key('home_greeting')), findsNothing);
     expect(find.byKey(const Key('catalog_list')), findsNothing);
+    expect(find.byKey(const Key('cart_button')), findsNothing);
+    expect(find.byKey(const Key('orders_button')), findsNothing);
   });
 
-  testWidgets('antes de restaurar a sessão, exibe indicador de carregamento',
-      (tester) async {
+  testWidgets('antes de restaurar a sessão, exibe indicador de carregamento', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildApp());
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byKey(const Key('login_submit')), findsNothing);
   });
 
-  testWidgets('fluxo completo: login, catálogo, detalhe e logout',
-      (tester) async {
+  testWidgets('fluxo completo: login, catálogo, detalhe e logout', (
+    tester,
+  ) async {
     await controller.restoreSession();
     await pumpApp(tester);
 
@@ -93,5 +100,47 @@ void main() {
 
     expect(find.byKey(const Key('catalog_list')), findsOneWidget);
     expect(find.byKey(const Key('login_submit')), findsNothing);
+  });
+
+  testWidgets('cadastro válido entra no catálogo e o link volta ao login', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await controller.restoreSession();
+    await pumpApp(tester);
+
+    await tester.tap(find.byKey(const Key('login_create_account')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('register_submit')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('register_go_to_login')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('login_submit')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('login_create_account')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('register_name')), 'Ana Silva');
+    await tester.enterText(
+      find.byKey(const Key('register_email')),
+      'Ana@Example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_password')),
+      'Senha1234',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_password_confirm')),
+      'Senha1234',
+    );
+    await tester.tap(find.byKey(const Key('register_submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Olá, Ana Silva'), findsOneWidget);
+    expect(find.byKey(const Key('catalog_list')), findsOneWidget);
+    expect(find.byKey(const Key('cart_button')), findsOneWidget);
+    expect(session.id, isNot(FakeAuthRepository.user.id));
   });
 }
