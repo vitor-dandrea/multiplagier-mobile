@@ -51,6 +51,7 @@ class FakeAuthRepository implements AuthRepository {
   final String email;
   final String password;
   int registerCalls = 0;
+  int authenticateCalls = 0;
   int _nextId = 2;
   final List<_Account> _accounts = [];
 
@@ -102,6 +103,7 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<User?> authenticate(String inputEmail, String inputPassword) async {
+    authenticateCalls++;
     final normalized = inputEmail.trim().toLowerCase();
     for (final account in _accounts) {
       if (account.user.email == normalized &&

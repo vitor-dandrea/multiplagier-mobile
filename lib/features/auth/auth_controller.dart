@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/security/login_throttle.dart';
 import '../../core/session/session_store.dart';
 import '../../core/validation/input_rules.dart';
 import '../../data/models/user.dart';
@@ -9,7 +10,11 @@ enum AuthStatus { unknown, unauthenticated, authenticated }
 
 /// Estado de autenticação do app (login, logout e restauração da sessão).
 class AuthController extends ChangeNotifier {
-  AuthController({required this._repository, required this._sessionStore});
+  AuthController({
+    required this._repository,
+    required this._sessionStore,
+    LoginThrottle? loginThrottle,
+  }) : _loginThrottle = loginThrottle ?? LoginThrottle();
 
   /// Mensagem genérica: não revela se o e-mail existe.
   static const invalidCredentialsMessage = 'E-mail ou senha inválidos.';
@@ -18,9 +23,12 @@ class AuthController extends ChangeNotifier {
   static const emailTakenMessage = 'Este e-mail já está cadastrado.';
   static const unexpectedRegistrationMessage =
       'Não foi possível criar a conta. Tente novamente.';
+  static const tooManyAttemptsMessage =
+      'Muitas tentativas. Aguarde 1 minuto e tente novamente.';
 
   final AuthRepository _repository;
   final SessionStore _sessionStore;
+  final LoginThrottle _loginThrottle;
 
   AuthStatus _status = AuthStatus.unknown;
   User? _user;
@@ -88,11 +96,20 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final user = await _repository.authenticate(email, password);
-      if (user == null) {
-        _errorMessage = invalidCredentialsMessage;
+      if (_loginThrottle.isLocked(email)) {
+        _errorMessage = tooManyAttemptsMessage;
         return false;
       }
+
+      final user = await _repository.authenticate(email, password);
+      if (user == null) {
+        _loginThrottle.registerFailure(email);
+        _errorMessage = _loginThrottle.isLocked(email)
+            ? tooManyAttemptsMessage
+            : invalidCredentialsMessage;
+        return false;
+      }
+      _loginThrottle.registerSuccess(email);
       await _sessionStore.saveUserId(user.id);
       _setSession(user);
       return true;

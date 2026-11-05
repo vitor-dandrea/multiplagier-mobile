@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multiplagier_mobile/core/security/login_throttle.dart';
 import 'package:multiplagier_mobile/core/security/password_hasher.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
@@ -198,5 +199,34 @@ void main() {
         expect(failing.errorMessage, isNot(contains('db offline')));
       },
     );
+
+    test('SEC-003 bloqueia após várias falhas e não consulta o banco', () async {
+      var now = DateTime(2026, 11, 5, 16);
+      final fake = FakeAuthRepository();
+      final locked = AuthController(
+        repository: fake,
+        sessionStore: MemorySessionStore(),
+        loginThrottle: LoginThrottle(
+          maxAttempts: 3,
+          lockDuration: const Duration(minutes: 1),
+          clock: () => now,
+        ),
+      );
+
+      for (var i = 0; i < 3; i++) {
+        expect(await locked.login(demoUserEmail, 'errada'), isFalse);
+      }
+      expect(fake.authenticateCalls, 3);
+      expect(locked.errorMessage, AuthController.tooManyAttemptsMessage);
+
+      expect(await locked.login(demoUserEmail, demoUserPassword), isFalse);
+      expect(fake.authenticateCalls, 3);
+      expect(locked.errorMessage, AuthController.tooManyAttemptsMessage);
+
+      now = now.add(const Duration(minutes: 1, seconds: 1));
+      expect(await locked.login(demoUserEmail, demoUserPassword), isTrue);
+      expect(fake.authenticateCalls, 4);
+      expect(locked.status, AuthStatus.authenticated);
+    });
   });
 }
