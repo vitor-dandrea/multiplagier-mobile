@@ -30,9 +30,34 @@ void main() {
 
     expect(find.text('Fone Bluetooth'), findsOneWidget);
     expect(find.text('R\$ 189,90'), findsOneWidget);
-    expect(find.text('Em estoque'), findsOneWidget);
+    expect(find.textContaining('Em estoque'), findsOneWidget);
     expect(find.text('Tablet 10"'), findsOneWidget);
-    expect(find.text('Indisponível'), findsOneWidget);
+    expect(find.textContaining('Indisponível'), findsOneWidget);
+    expect(find.byKey(const Key('catalog_search')), findsOneWidget);
+    expect(find.byKey(const Key('catalog_category_Áudio')), findsOneWidget);
+  });
+
+  testWidgets('busca e categoria restringem a lista', (tester) async {
+    await pumpList(tester, FakeCatalogRepository());
+
+    await tester.enterText(find.byKey(const Key('catalog_search')), 'tablet');
+    await tester.pump();
+
+    expect(find.text('Tablet 10"'), findsOneWidget);
+    expect(find.text('Fone Bluetooth'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('catalog_search_clear')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('catalog_category_Áudio')));
+    await tester.pump();
+
+    expect(find.text('Fone Bluetooth'), findsOneWidget);
+    expect(find.text('Tablet 10"'), findsNothing);
+
+    await tester.enterText(find.byKey(const Key('catalog_search')), 'xyz');
+    await tester.pump();
+    expect(find.byKey(const Key('catalog_no_match')), findsOneWidget);
+    expect(find.text(ProductListPage.noMatchMessage), findsOneWidget);
   });
 
   testWidgets('não exibe produtos inativos', (tester) async {
@@ -42,6 +67,7 @@ void main() {
         id: 9,
         name: 'Produto Oculto',
         description: 'x',
+        category: 'Outros',
         priceCents: 100,
         stock: 1,
         isActive: false,

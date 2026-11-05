@@ -24,6 +24,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
       'name': 'Smart TV 50" 4K',
       'description':
           'Smart TV LED 50 polegadas com resolução 4K, HDR e aplicativos de streaming integrados.',
+      'category': 'TVs',
       'price_cents': 249900,
       'stock': 12,
       'is_active': 1,
@@ -32,6 +33,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
       'name': 'Fone de Ouvido Bluetooth',
       'description':
           'Headphone sem fio com cancelamento de ruído e até 30 horas de bateria.',
+      'category': 'Áudio',
       'price_cents': 18990,
       'stock': 40,
       'is_active': 1,
@@ -40,6 +42,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
       'name': 'Tablet 10" 64GB',
       'description':
           'Tablet com tela de 10 polegadas, 64GB de armazenamento e Wi-Fi.',
+      'category': 'Tablets',
       'price_cents': 89900,
       'stock': 0,
       'is_active': 1,
@@ -48,6 +51,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
       'name': 'Caixa de Som Portátil',
       'description':
           'Caixa de som Bluetooth resistente à água, com 12 horas de reprodução.',
+      'category': 'Áudio',
       'price_cents': 15990,
       'stock': 25,
       'is_active': 1,
@@ -56,6 +60,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
       'name': 'Mouse Gamer RGB',
       'description':
           'Mouse óptico com 6 botões programáveis e sensor de até 7200 DPI.',
+      'category': 'Periféricos',
       'price_cents': 12990,
       'stock': 30,
       'is_active': 1,
@@ -63,6 +68,7 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
     {
       'name': 'Produto Descontinuado',
       'description': 'Item fora de linha; não deve aparecer no catálogo público.',
+      'category': 'Outros',
       'price_cents': 9990,
       'stock': 3,
       'is_active': 0,

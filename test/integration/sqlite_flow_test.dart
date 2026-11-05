@@ -5,7 +5,9 @@ import 'package:multiplagier_mobile/core/security/password_hasher.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
+import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/catalog_repository.dart';
+import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -27,8 +29,9 @@ Future<void> pumpUntilFound(WidgetTester tester, Finder finder) async {
 void main() {
   sqfliteFfiInit();
 
-  testWidgets('login com usuário seed e catálogo vindos do SQLite',
-      (tester) async {
+  testWidgets('login com usuário seed e catálogo vindos do SQLite', (
+    tester,
+  ) async {
     final hasher = PasswordHasher(iterations: 100);
     late AppDatabase database;
     late AuthController controller;
@@ -50,15 +53,14 @@ void main() {
       MultiplagierApp(
         authController: controller,
         catalogRepository: SqliteCatalogRepository(database),
+        cartRepository: SqliteCartRepository(database),
+        orderRepository: SqliteOrderRepository(database),
       ),
     );
     await tester.pump();
 
     // Senha errada: erro genérico, continua no login.
-    await tester.enterText(
-      find.byKey(const Key('login_email')),
-      demoUserEmail,
-    );
+    await tester.enterText(find.byKey(const Key('login_email')), demoUserEmail);
     await tester.enterText(find.byKey(const Key('login_password')), 'errada');
     await tester.tap(find.byKey(const Key('login_submit')));
     await pumpUntilFound(tester, find.byKey(const Key('login_error')));

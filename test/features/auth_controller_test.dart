@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multiplagier_mobile/core/security/login_throttle.dart';
 import 'package:multiplagier_mobile/core/security/password_hasher.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
@@ -16,6 +17,13 @@ class _ThrowingRepository implements AuthRepository {
 
   @override
   Future<User?> findById(int id) => throw StateError('db offline');
+
+  @override
+  Future<RegistrationOutcome> register({
+    required String name,
+    required String email,
+    required String password,
+  }) => throw StateError('db offline');
 }
 
 void main() {
@@ -54,8 +62,10 @@ void main() {
 
     test('login inválido usa mensagem genérica e não cria sessão', () async {
       final wrongPassword = await controller.login(demoUserEmail, 'errada');
-      final unknownEmail =
-          await controller.login('ninguem@x.com', demoUserPassword);
+      final unknownEmail = await controller.login(
+        'ninguem@x.com',
+        demoUserPassword,
+      );
 
       expect(wrongPassword, isFalse);
       expect(unknownEmail, isFalse);
@@ -95,17 +105,128 @@ void main() {
       expect(session.id, isNull);
     });
 
-    test('falha inesperada vira mensagem amigável sem vazar detalhes', () async {
+    test('cadastro válido autentica e permite um novo login', () async {
+      const email = 'ana@example.com';
+      const password = 'Senha1234';
+
+      final ok = await controller.register(
+        name: '  Ana Silva  ',
+        email: email,
+        password: password,
+      );
+
+      expect(ok, isTrue);
+      expect(controller.status, AuthStatus.authenticated);
+      expect(controller.user?.name, 'Ana Silva');
+      expect(controller.user?.email, email);
+      expect(controller.user?.role, 'customer');
+      expect(session.id, controller.user!.id);
+      expect(controller.isBusy, isFalse);
+
+      final again = AuthController(
+        repository: SqliteAuthRepository(database, hasher),
+        sessionStore: MemorySessionStore(),
+      );
+      expect(await again.login(email, password), isTrue);
+      expect(again.user?.name, 'Ana Silva');
+    });
+
+    test('e-mail duplicado é recusado sem criar sessão', () async {
+      final ok = await controller.register(
+        name: 'Outra Pessoa',
+        email: '  Cliente@Multiplagier.LOCAL ',
+        password: 'Senha1234',
+      );
+
+      expect(ok, isFalse);
+      expect(controller.errorMessage, AuthController.emailTakenMessage);
+      expect(controller.status, isNot(AuthStatus.authenticated));
+      expect(session.id, isNull);
+    });
+
+    test('senha fraca é recusada sem gravar a senha na mensagem', () async {
+      const password = 'curta';
+      final ok = await controller.register(
+        name: 'Ana',
+        email: 'ana@example.com',
+        password: password,
+      );
+
+      expect(ok, isFalse);
+      expect(controller.errorMessage, isNot(contains(password)));
+      expect(session.id, isNull);
+      final rows = await database.db.query(
+        'users',
+        where: 'email = ?',
+        whereArgs: ['ana@example.com'],
+      );
+      expect(rows, isEmpty);
+    });
+
+    test('falha inesperada no cadastro não vaza detalhes', () async {
       final failing = AuthController(
         repository: _ThrowingRepository(),
         sessionStore: session,
       );
 
-      final ok = await failing.login(demoUserEmail, demoUserPassword);
+      final ok = await failing.register(
+        name: 'Ana',
+        email: 'ana@example.com',
+        password: 'Senha1234',
+      );
 
       expect(ok, isFalse);
-      expect(failing.errorMessage, AuthController.unexpectedErrorMessage);
+      expect(
+        failing.errorMessage,
+        AuthController.unexpectedRegistrationMessage,
+      );
       expect(failing.errorMessage, isNot(contains('db offline')));
+      expect(failing.isBusy, isFalse);
+    });
+
+    test(
+      'falha inesperada vira mensagem amigável sem vazar detalhes',
+      () async {
+        final failing = AuthController(
+          repository: _ThrowingRepository(),
+          sessionStore: session,
+        );
+
+        final ok = await failing.login(demoUserEmail, demoUserPassword);
+
+        expect(ok, isFalse);
+        expect(failing.errorMessage, AuthController.unexpectedErrorMessage);
+        expect(failing.errorMessage, isNot(contains('db offline')));
+      },
+    );
+
+    test('SEC-003 bloqueia após várias falhas e não consulta o banco', () async {
+      var now = DateTime(2026, 11, 5, 16);
+      final fake = FakeAuthRepository();
+      final locked = AuthController(
+        repository: fake,
+        sessionStore: MemorySessionStore(),
+        loginThrottle: LoginThrottle(
+          maxAttempts: 3,
+          lockDuration: const Duration(minutes: 1),
+          clock: () => now,
+        ),
+      );
+
+      for (var i = 0; i < 3; i++) {
+        expect(await locked.login(demoUserEmail, 'errada'), isFalse);
+      }
+      expect(fake.authenticateCalls, 3);
+      expect(locked.errorMessage, AuthController.tooManyAttemptsMessage);
+
+      expect(await locked.login(demoUserEmail, demoUserPassword), isFalse);
+      expect(fake.authenticateCalls, 3);
+      expect(locked.errorMessage, AuthController.tooManyAttemptsMessage);
+
+      now = now.add(const Duration(minutes: 1, seconds: 1));
+      expect(await locked.login(demoUserEmail, demoUserPassword), isTrue);
+      expect(fake.authenticateCalls, 4);
+      expect(locked.status, AuthStatus.authenticated);
     });
   });
 }

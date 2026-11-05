@@ -13,7 +13,12 @@ MVP em construção. Escopo atual:
 | Configuração inicial (Flutter + SQLite + seed) | Concluído |
 | Login local (login, logout, restauração de sessão) | Concluído |
 | Catálogo (lista e detalhe de produtos ativos) | Concluído |
-| Cadastro, carrinho, pedidos, sincronização com API | Não iniciado |
+| Cadastro de cliente (US-001) | Concluído |
+| Carrinho local | Concluído |
+| Pedidos do cliente (US-006, US-007, SEC-001) | Concluído |
+| Limite de tentativas de login (SEC-003) | Concluído |
+| Busca e filtro do catálogo (US-009) | Concluído |
+| Sincronização com API | Não iniciado |
 
 ## Stack
 
@@ -46,20 +51,26 @@ O banco é criado e populado na primeira execução.
 
 São semeados 5 produtos ativos e 1 inativo (usado para provar o filtro do catálogo).
 
+Novas contas são criadas em **Criar conta**. A senha precisa ter pelo menos 8 caracteres, com letras e números, e fica armazenada só como hash. Depois do cadastro a sessão já entra no catálogo. Carrinho e pedidos ficam no SQLite, separados por usuário.
+
+O login bloqueia o e-mail por 1 minuto após 5 tentativas inválidas (SEC-003). No catálogo dá para buscar por texto e filtrar por categoria (US-009).
+
 ## Arquitetura
 
 ```text
 lib/
   main.dart            # bootstrap (factory SQLite por plataforma)
   app.dart             # MaterialApp
-  core/                # tema e segurança (hash de senha)
+  core/                # tema, validação, formato e segurança (hash de senha)
   data/db/             # AppDatabase, schema e seed
-  features/            # auth e catalog (por funcionalidade)
+  features/            # auth, catalog, cart e orders (por funcionalidade)
 ```
 
 ## Relatório de status e evidências
 
-- Relatório em Word: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (gerado por `docs/gerar-relatorio-status.mjs`; use `cd docs && npm install && npm run relatorio`).
+- Relatório de 02/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (`cd docs && npm install && npm run relatorio`).
+- Continuação de 23/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile_23-10-2026.docx`.
+- Relatório de acompanhamento da atividade: `docs/Relatorio_Acompanhamento_23-10-2026.docx` (`npm run relatorio:23-10` gera os dois de 23/10).
 - Capturas de tela em `docs/evidencias/`, geradas por `flutter test tool/screenshots/capture_screens_test.dart` (renderização do app via teste de widget, não é print de emulador).
 
 ## Fluxo de Git

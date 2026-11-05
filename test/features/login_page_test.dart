@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildAppTheme(),
-        home: LoginPage(controller: controller),
+        home: LoginPage(controller: controller, onCreateAccount: () {}),
       ),
     );
     await tester.pumpAndSettle();
@@ -46,8 +46,9 @@ void main() {
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
   });
 
-  testWidgets('campos vazios mostram validação e não chamam o login',
-      (tester) async {
+  testWidgets('campos vazios mostram validação e não chamam o login', (
+    tester,
+  ) async {
     await pumpLogin(tester);
 
     await tester.tap(find.byKey(const Key('login_submit')));
@@ -93,15 +94,38 @@ void main() {
     expect(find.byKey(const Key('login_error')), findsNothing);
   });
 
+  testWidgets('botão Criar conta avisa quem controla a navegação', (
+    tester,
+  ) async {
+    var opened = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(),
+        home: LoginPage(
+          controller: controller,
+          onCreateAccount: () => opened = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('login_create_account')));
+    await tester.tap(find.byKey(const Key('login_create_account')));
+    await tester.pump();
+
+    expect(opened, isTrue);
+    expect(controller.status, AuthStatus.unknown);
+  });
+
   testWidgets('botão alterna visibilidade da senha', (tester) async {
     await pumpLogin(tester);
 
     EditableText field() => tester.widget<EditableText>(
-          find.descendant(
-            of: find.byKey(const Key('login_password')),
-            matching: find.byType(EditableText),
-          ),
-        );
+      find.descendant(
+        of: find.byKey(const Key('login_password')),
+        matching: find.byType(EditableText),
+      ),
+    );
 
     expect(field().obscureText, isTrue);
     await tester.tap(find.byTooltip('Mostrar senha'));

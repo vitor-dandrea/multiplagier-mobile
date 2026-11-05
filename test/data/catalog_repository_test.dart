@@ -27,9 +27,14 @@ void main() {
 
       expect(products, hasLength(5));
       expect(products.every((p) => p.isActive), isTrue);
+      expect(products.every((p) => p.category.isNotEmpty), isTrue);
       expect(
         products.map((p) => p.name),
         isNot(contains('Produto Descontinuado')),
+      );
+      expect(
+        products.map((p) => p.category),
+        containsAll(['Áudio', 'TVs', 'Tablets', 'Periféricos']),
       );
     });
 

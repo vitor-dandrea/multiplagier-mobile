@@ -11,13 +11,20 @@ class ProductDetailPage extends StatefulWidget {
     super.key,
     required this.repository,
     required this.productId,
+    this.onAddToCart,
   });
 
   static const notFoundMessage = 'Produto não encontrado.';
   static const errorMessage = 'Não foi possível carregar o produto.';
+  static const addedMessage = 'Adicionado ao carrinho.';
+  static const addErrorMessage = 'Não foi possível adicionar ao carrinho.';
 
   final CatalogRepository repository;
   final int productId;
+
+  /// `null` quando o item foi adicionado; mensagem quando não foi.
+  /// Ausente, o detalhe só exibe o produto (catálogo).
+  final Future<String?> Function()? onAddToCart;
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -25,10 +32,38 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   late final Future<Product?> _future = _load();
+  bool _adding = false;
+  String? _feedback;
+  bool _feedbackIsError = false;
 
   // `async` garante que qualquer falha vire erro do Future (e não do build).
   Future<Product?> _load() async =>
       widget.repository.findActiveById(widget.productId);
+
+  Future<void> _add() async {
+    final onAddToCart = widget.onAddToCart;
+    if (onAddToCart == null || _adding) return;
+    setState(() {
+      _adding = true;
+      _feedback = null;
+    });
+    try {
+      final error = await onAddToCart();
+      if (!mounted) return;
+      setState(() {
+        _feedback = error ?? ProductDetailPage.addedMessage;
+        _feedbackIsError = error != null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _feedback = ProductDetailPage.addErrorMessage;
+        _feedbackIsError = true;
+      });
+    } finally {
+      if (mounted) setState(() => _adding = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +88,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               text: ProductDetailPage.notFoundMessage,
             );
           }
-          return _ProductDetail(product: product);
+          return Column(
+            children: [
+              Expanded(child: _ProductDetail(product: product)),
+              if (widget.onAddToCart != null)
+                _AddToCartBar(
+                  enabled: product.isAvailable && !_adding,
+                  label: product.isAvailable
+                      ? 'Adicionar ao carrinho'
+                      : 'Indisponível',
+                  feedback: _feedback,
+                  feedbackIsError: _feedbackIsError,
+                  onPressed: _add,
+                ),
+            ],
+          );
         },
       ),
     );
@@ -118,6 +167,59 @@ class _ProductDetail extends StatelessWidget {
           style: theme.textTheme.bodyLarge,
         ),
       ],
+    );
+  }
+}
+
+class _AddToCartBar extends StatelessWidget {
+  const _AddToCartBar({
+    required this.enabled,
+    required this.label,
+    required this.feedback,
+    required this.feedbackIsError,
+    required this.onPressed,
+  });
+
+  final bool enabled;
+  final String label;
+  final String? feedback;
+  final bool feedbackIsError;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      elevation: 8,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (feedback != null) ...[
+                Text(
+                  feedback!,
+                  key: const Key('add_to_cart_feedback'),
+                  style: TextStyle(
+                    color: feedbackIsError
+                        ? theme.colorScheme.error
+                        : Colors.green.shade800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              FilledButton.icon(
+                key: const Key('add_to_cart'),
+                onPressed: enabled ? onPressed : null,
+                icon: const Icon(Icons.add_shopping_cart),
+                label: Text(label),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

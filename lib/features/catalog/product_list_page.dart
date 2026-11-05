@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
+import 'catalog_filter.dart';
 
-/// Lista de produtos ativos (US-003). Não depende de navegação: quem usa
-/// decide o que fazer ao tocar em um produto.
+/// Lista de produtos ativos (US-003) com busca e filtro por categoria (US-009).
 class ProductListPage extends StatefulWidget {
   const ProductListPage({
     super.key,
@@ -15,6 +15,8 @@ class ProductListPage extends StatefulWidget {
 
   static const errorMessage = 'Não foi possível carregar o catálogo.';
   static const emptyMessage = 'Nenhum produto disponível no momento.';
+  static const noMatchMessage =
+      'Nenhum produto encontrado para esta busca.';
 
   final CatalogRepository repository;
   final ValueChanged<Product> onProductTap;
@@ -25,6 +27,9 @@ class ProductListPage extends StatefulWidget {
 
 class _ProductListPageState extends State<ProductListPage> {
   late Future<List<Product>> _future = _load();
+  final _searchController = TextEditingController();
+  String _query = '';
+  String? _category;
 
   // `async` garante que qualquer falha vire erro do Future (e não do build).
   Future<List<Product>> _load() async => widget.repository.listActiveProducts();
@@ -42,6 +47,12 @@ class _ProductListPageState extends State<ProductListPage> {
     } catch (_) {
       // O erro é exibido pelo FutureBuilder.
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,18 +80,96 @@ class _ProductListPageState extends State<ProductListPage> {
             message: ProductListPage.emptyMessage,
           );
         }
-        return RefreshIndicator(
-          onRefresh: _refresh,
-          child: ListView.separated(
-            key: const Key('catalog_list'),
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: products.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) => _ProductTile(
-              product: products[index],
-              onTap: () => widget.onProductTap(products[index]),
+
+        final categories = catalogCategories(products);
+        final visible = filterCatalog(
+          products,
+          query: _query,
+          category: _category,
+        );
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: TextField(
+                key: const Key('catalog_search'),
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Buscar produtos',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          key: const Key('catalog_search_clear'),
+                          tooltip: 'Limpar busca',
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
+                ),
+                onChanged: (value) => setState(() => _query = value),
+              ),
             ),
-          ),
+            if (categories.isNotEmpty)
+              SizedBox(
+                height: 44,
+                child: ListView(
+                  key: const Key('catalog_categories'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        key: const Key('catalog_category_all'),
+                        label: const Text('Todas'),
+                        selected: _category == null,
+                        onSelected: (_) => setState(() => _category = null),
+                      ),
+                    ),
+                    ...categories.map(
+                      (category) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          key: Key('catalog_category_$category'),
+                          label: Text(category),
+                          selected: _category == category,
+                          onSelected: (_) => setState(() {
+                            _category = _category == category ? null : category;
+                          }),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: visible.isEmpty
+                  ? const _MessageState(
+                      key: Key('catalog_no_match'),
+                      icon: Icons.search_off,
+                      message: ProductListPage.noMatchMessage,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        key: const Key('catalog_list'),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: visible.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) => _ProductTile(
+                          product: visible[index],
+                          onTap: () => widget.onProductTap(visible[index]),
+                        ),
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -114,7 +203,7 @@ class _ProductTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        available ? 'Em estoque' : 'Indisponível',
+        '${product.category} · ${available ? 'Em estoque' : 'Indisponível'}',
         style: TextStyle(
           color: available ? Colors.green.shade800 : theme.colorScheme.error,
         ),

@@ -3,6 +3,7 @@ class Product {
     required this.id,
     required this.name,
     required this.description,
+    required this.category,
     required this.priceCents,
     required this.stock,
     required this.isActive,
@@ -13,6 +14,7 @@ class Product {
       id: row['id'] as int,
       name: row['name'] as String,
       description: row['description'] as String,
+      category: (row['category'] as String?) ?? 'Outros',
       priceCents: row['price_cents'] as int,
       stock: row['stock'] as int,
       isActive: (row['is_active'] as int) == 1,
@@ -22,6 +24,7 @@ class Product {
   final int id;
   final String name;
   final String description;
+  final String category;
   final int priceCents;
   final int stock;
   final bool isActive;

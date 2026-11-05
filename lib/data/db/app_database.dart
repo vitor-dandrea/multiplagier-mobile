@@ -6,12 +6,12 @@ import 'seed.dart';
 
 /// Acesso ao banco SQLite local do app.
 ///
-/// O schema espelha, de forma reduzida, o domínio do Multiplagier web
-/// (usuários e produtos com flag `is_active`).
+/// O schema espelha, de forma reduzida, o domínio do Multiplagier web:
+/// usuários, produtos, carrinho e pedidos do próprio cliente.
 class AppDatabase {
   AppDatabase._(this.db);
 
-  static const _schemaVersion = 1;
+  static const _schemaVersion = 3;
   static const _fileName = 'multiplagier.db';
 
   final Database db;
@@ -34,16 +34,32 @@ class AppDatabase {
       dbPath,
       options: OpenDatabaseOptions(
         version: _schemaVersion,
+        onConfigure: (db) async {
+          await db.execute('PRAGMA foreign_keys = ON');
+        },
         onCreate: (db, version) async {
           await _createSchema(db);
           await seedDatabase(db, passwordHasher);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await _createCommerceSchema(db);
+          }
+          if (oldVersion < 3) {
+            await _migrateProductsCategory(db);
+          }
         },
       ),
     );
     return AppDatabase._(db);
   }
 
-  static Future<void> _createSchema(Database db) async {
+  static Future<void> _createSchema(DatabaseExecutor db) async {
+    await _createCatalogSchema(db);
+    await _createCommerceSchema(db);
+  }
+
+  static Future<void> _createCatalogSchema(DatabaseExecutor db) async {
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,9 +75,82 @@ class AppDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'Outros',
         price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
         stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
         is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1))
+      )
+    ''');
+  }
+
+  static Future<void> _migrateProductsCategory(DatabaseExecutor db) async {
+    await db.execute(
+      "ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Outros'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'TVs' WHERE name LIKE 'Smart TV%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Áudio' "
+      "WHERE name LIKE 'Fone%' OR name LIKE 'Caixa%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Tablets' WHERE name LIKE 'Tablet%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Periféricos' WHERE name LIKE 'Mouse%'",
+    );
+  }
+
+  static Future<void> _createCommerceSchema(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE cart_items (
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL CHECK (quantity > 0),
+        PRIMARY KEY (user_id, product_id),
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (product_id) REFERENCES products (id)
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_orders_user_id ON orders (user_id)
+    ''');
+    await db.execute('''
+      CREATE TABLE order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        product_name TEXT NOT NULL,
+        unit_price_cents INTEGER NOT NULL CHECK (unit_price_cents >= 0),
+        quantity INTEGER NOT NULL CHECK (quantity > 0),
+        FOREIGN KEY (order_id) REFERENCES orders (id),
+        FOREIGN KEY (product_id) REFERENCES products (id)
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_order_items_order_id ON order_items (order_id)
+    ''');
+    // Auditoria mínima (SEC-001): tipo do evento, ator e id do recurso.
+    // Sem senha, e-mail, itens ou dados do dono do pedido.
+    await db.execute('''
+      CREATE TABLE security_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        actor_user_id INTEGER,
+        resource_type TEXT NOT NULL,
+        resource_id INTEGER,
+        created_at TEXT NOT NULL
       )
     ''');
   }
