@@ -59,6 +59,7 @@ void main() {
           id: 5,
           name: 'Oculto',
           description: 'x',
+          category: 'Outros',
           priceCents: 100,
           stock: 1,
           isActive: false,

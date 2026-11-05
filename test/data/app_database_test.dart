@@ -167,11 +167,86 @@ void main() {
         expect(tables.map((t) => t['name']), contains('cart_items'));
         expect(tables.map((t) => t['name']), contains('orders'));
 
+        final products = await upgraded.db.query('products');
+        expect(products.single['category'], 'Outros');
+
         await upgraded.db.insert('cart_items', {
           'user_id': users.single['id'],
           'product_id': 1,
           'quantity': 2,
         });
+      } finally {
+        await upgraded?.close();
+        if (dir.existsSync()) {
+          await dir.delete(recursive: true);
+        }
+      }
+    });
+
+    test('migra produtos v2 preenchendo a categoria', () async {
+      final dir = await Directory.systemTemp.createTemp('multiplagier_db_v2_');
+      final path = p.join(dir.path, 'v2.db');
+      AppDatabase? upgraded;
+      try {
+        final legacy = await databaseFactoryFfi.openDatabase(
+          path,
+          options: OpenDatabaseOptions(
+            version: 2,
+            onCreate: (db, version) async {
+              await db.execute('''
+                CREATE TABLE users (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  email TEXT NOT NULL UNIQUE,
+                  password_hash TEXT NOT NULL,
+                  role TEXT NOT NULL DEFAULT 'customer',
+                  created_at TEXT NOT NULL
+                )
+              ''');
+              await db.execute('''
+                CREATE TABLE products (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  description TEXT NOT NULL,
+                  price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
+                  stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+                  is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1))
+                )
+              ''');
+              await db.insert('users', {
+                'name': 'Cliente',
+                'email': 'v2@example.com',
+                'password_hash': 'pbkdf2\$1\$aa\$bb',
+                'role': 'customer',
+                'created_at': '2026-01-01T00:00:00.000Z',
+              });
+              await db.insert('products', {
+                'name': 'Smart TV 50" 4K',
+                'description': 'TV',
+                'price_cents': 1000,
+                'stock': 1,
+                'is_active': 1,
+              });
+              await db.insert('products', {
+                'name': 'Fone de Ouvido Bluetooth',
+                'description': 'Fone',
+                'price_cents': 1000,
+                'stock': 1,
+                'is_active': 1,
+              });
+            },
+          ),
+        );
+        await legacy.close();
+
+        upgraded = await AppDatabase.open(
+          factory: databaseFactoryFfi,
+          path: path,
+          hasher: hasher,
+        );
+        final rows = await upgraded.db.query('products', orderBy: 'id ASC');
+        expect(rows[0]['category'], 'TVs');
+        expect(rows[1]['category'], 'Áudio');
       } finally {
         await upgraded?.close();
         if (dir.existsSync()) {

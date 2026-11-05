@@ -7,12 +7,14 @@ void main() {
       'id': 3,
       'name': 'Mouse',
       'description': 'Mouse óptico',
+      'category': 'Periféricos',
       'price_cents': 12990,
       'stock': 0,
       'is_active': 1,
     });
 
     expect(product.id, 3);
+    expect(product.category, 'Periféricos');
     expect(product.priceCents, 12990);
     expect(product.isActive, isTrue);
     expect(product.isAvailable, isFalse);
@@ -23,6 +25,7 @@ void main() {
       'id': 4,
       'name': 'Antigo',
       'description': 'x',
+      'category': 'Outros',
       'price_cents': 1,
       'stock': 2,
       'is_active': 0,

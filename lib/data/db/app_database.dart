@@ -11,7 +11,7 @@ import 'seed.dart';
 class AppDatabase {
   AppDatabase._(this.db);
 
-  static const _schemaVersion = 2;
+  static const _schemaVersion = 3;
   static const _fileName = 'multiplagier.db';
 
   final Database db;
@@ -45,6 +45,9 @@ class AppDatabase {
           if (oldVersion < 2) {
             await _createCommerceSchema(db);
           }
+          if (oldVersion < 3) {
+            await _migrateProductsCategory(db);
+          }
         },
       ),
     );
@@ -72,11 +75,31 @@ class AppDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'Outros',
         price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
         stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
         is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1))
       )
     ''');
+  }
+
+  static Future<void> _migrateProductsCategory(DatabaseExecutor db) async {
+    await db.execute(
+      "ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Outros'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'TVs' WHERE name LIKE 'Smart TV%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Áudio' "
+      "WHERE name LIKE 'Fone%' OR name LIKE 'Caixa%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Tablets' WHERE name LIKE 'Tablet%'",
+    );
+    await db.execute(
+      "UPDATE products SET category = 'Periféricos' WHERE name LIKE 'Mouse%'",
+    );
   }
 
   static Future<void> _createCommerceSchema(DatabaseExecutor db) async {
