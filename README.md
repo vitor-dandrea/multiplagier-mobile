@@ -16,6 +16,8 @@ MVP em construção. Escopo atual:
 | Cadastro de cliente (US-001) | Concluído |
 | Carrinho local | Concluído |
 | Pedidos do cliente (US-006, US-007, SEC-001) | Concluído |
+| Limite de tentativas de login (SEC-003) | Concluído |
+| Busca e filtro do catálogo (US-009) | Concluído |
 | Sincronização com API | Não iniciado |
 
 ## Stack
@@ -50,6 +52,8 @@ O banco é criado e populado na primeira execução.
 São semeados 5 produtos ativos e 1 inativo (usado para provar o filtro do catálogo).
 
 Novas contas são criadas em **Criar conta**. A senha precisa ter pelo menos 8 caracteres, com letras e números, e fica armazenada só como hash. Depois do cadastro a sessão já entra no catálogo. Carrinho e pedidos ficam no SQLite, separados por usuário.
+
+O login bloqueia o e-mail por 1 minuto após 5 tentativas inválidas (SEC-003). No catálogo dá para buscar por texto e filtrar por categoria (US-009).
 
 ## Arquitetura
 
