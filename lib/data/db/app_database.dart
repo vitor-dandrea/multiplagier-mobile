@@ -11,7 +11,7 @@ import 'seed.dart';
 class AppDatabase {
   AppDatabase._(this.db);
 
-  static const _schemaVersion = 3;
+  static const _schemaVersion = 4;
   static const _fileName = 'multiplagier.db';
 
   final Database db;
@@ -47,6 +47,9 @@ class AppDatabase {
           }
           if (oldVersion < 3) {
             await _migrateProductsCategory(db);
+          }
+          if (oldVersion < 4) {
+            await _migrateOrdersPayment(db);
           }
         },
       ),
@@ -102,6 +105,22 @@ class AppDatabase {
     );
   }
 
+  static Future<void> _migrateOrdersPayment(DatabaseExecutor db) async {
+    final tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'orders'",
+    );
+    if (tables.isEmpty) return;
+
+    final cols = await db.rawQuery('PRAGMA table_info(orders)');
+    final names = cols.map((c) => c['name'] as String).toSet();
+    if (!names.contains('payment_method')) {
+      await db.execute('ALTER TABLE orders ADD COLUMN payment_method TEXT');
+    }
+    if (!names.contains('payment_last4')) {
+      await db.execute('ALTER TABLE orders ADD COLUMN payment_last4 TEXT');
+    }
+  }
+
   static Future<void> _createCommerceSchema(DatabaseExecutor db) async {
     await db.execute('''
       CREATE TABLE cart_items (
@@ -120,6 +139,8 @@ class AppDatabase {
         status TEXT NOT NULL,
         total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
         created_at TEXT NOT NULL,
+        payment_method TEXT,
+        payment_last4 TEXT,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');
