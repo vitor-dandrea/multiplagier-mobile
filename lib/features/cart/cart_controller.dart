@@ -20,6 +20,8 @@ class CartController extends ChangeNotifier {
   static const emptyCartMessage = 'Seu carrinho está vazio.';
   static const unavailableCheckoutMessage =
       'Um ou mais itens não estão mais disponíveis.';
+  static const missingAddressMessage =
+      'Cadastre um endereço completo na sua conta para finalizar.';
   static const loadErrorMessage = 'Não foi possível carregar o carrinho.';
   static const unexpectedMessage =
       'Não foi possível concluir a operação. Tente novamente.';
@@ -165,6 +167,8 @@ class CartController extends ChangeNotifier {
         return emptyCartMessage;
       case PlaceOrderFailure.unavailable:
         return unavailableCheckoutMessage;
+      case PlaceOrderFailure.missingAddress:
+        return missingAddressMessage;
       case null:
         return unexpectedMessage;
     }

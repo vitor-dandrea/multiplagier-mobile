@@ -17,6 +17,13 @@ Future<void> seedDatabase(DatabaseExecutor db, PasswordHasher hasher) async {
     'password_hash': hasher.hash(demoUserPassword),
     'role': 'customer',
     'created_at': now,
+    'address_street': 'Rua das Flores',
+    'address_number': '100',
+    'address_complement': 'Apto 12',
+    'address_district': 'Centro',
+    'address_city': 'Mauá',
+    'address_state': 'SP',
+    'address_zip': '09310000',
   });
 
   const products = <Map<String, Object>>[

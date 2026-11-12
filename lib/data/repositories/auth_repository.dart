@@ -1,11 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/security/password_hasher.dart';
+import '../../core/validation/address_rules.dart';
 import '../../core/validation/input_rules.dart';
 import '../db/app_database.dart';
+import '../models/shipping_address.dart';
 import '../models/user.dart';
 
 enum RegistrationFailure { invalidName, invalidEmail, weakPassword, emailTaken }
+
+enum ProfileUpdateFailure { invalidName, invalidAddress, notFound }
 
 /// Resultado de [AuthRepository.register]. Falhas esperadas não são exceção.
 class RegistrationOutcome {
@@ -15,6 +19,15 @@ class RegistrationOutcome {
 
   final User? user;
   final RegistrationFailure? failure;
+}
+
+class ProfileUpdateOutcome {
+  const ProfileUpdateOutcome.success(this.user) : failure = null;
+
+  const ProfileUpdateOutcome.failure(this.failure) : user = null;
+
+  final User? user;
+  final ProfileUpdateFailure? failure;
 }
 
 /// Contrato de autenticação e cadastro (US-001 e US-002).
@@ -32,6 +45,13 @@ abstract class AuthRepository {
   Future<User?> authenticate(String email, String password);
 
   Future<User?> findById(int id);
+
+  /// Atualiza nome e endereço. E-mail e senha não mudam nesta operação.
+  Future<ProfileUpdateOutcome> updateProfile({
+    required int userId,
+    required String name,
+    required ShippingAddress address,
+  });
 }
 
 class SqliteAuthRepository implements AuthRepository {
@@ -122,5 +142,51 @@ class SqliteAuthRepository implements AuthRepository {
       limit: 1,
     );
     return rows.isEmpty ? null : User.fromRow(rows.single);
+  }
+
+  @override
+  Future<ProfileUpdateOutcome> updateProfile({
+    required int userId,
+    required String name,
+    required ShippingAddress address,
+  }) async {
+    final trimmedName = name.trim();
+    if (!InputRules.isValidName(trimmedName)) {
+      return const ProfileUpdateOutcome.failure(
+        ProfileUpdateFailure.invalidName,
+      );
+    }
+    if (!_isValidAddress(address)) {
+      return const ProfileUpdateOutcome.failure(
+        ProfileUpdateFailure.invalidAddress,
+      );
+    }
+
+    final updated = await _database.db.update(
+      'users',
+      {
+        'name': trimmedName,
+        ...address.toUserColumns(),
+      },
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+    if (updated != 1) {
+      return const ProfileUpdateOutcome.failure(ProfileUpdateFailure.notFound);
+    }
+    final user = await findById(userId);
+    if (user == null) {
+      return const ProfileUpdateOutcome.failure(ProfileUpdateFailure.notFound);
+    }
+    return ProfileUpdateOutcome.success(user);
+  }
+
+  bool _isValidAddress(ShippingAddress address) {
+    return AddressRules.isNonEmpty(address.street) &&
+        AddressRules.isNonEmpty(address.number) &&
+        AddressRules.isNonEmpty(address.district) &&
+        AddressRules.isNonEmpty(address.city) &&
+        AddressRules.isValidState(address.state) &&
+        AddressRules.isValidZip(address.zip);
   }
 }

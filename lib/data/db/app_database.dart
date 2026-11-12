@@ -11,7 +11,7 @@ import 'seed.dart';
 class AppDatabase {
   AppDatabase._(this.db);
 
-  static const _schemaVersion = 4;
+  static const _schemaVersion = 5;
   static const _fileName = 'multiplagier.db';
 
   final Database db;
@@ -51,6 +51,9 @@ class AppDatabase {
           if (oldVersion < 4) {
             await _migrateOrdersPayment(db);
           }
+          if (oldVersion < 5) {
+            await _migrateUserAndOrderAddress(db);
+          }
         },
       ),
     );
@@ -70,7 +73,14 @@ class AppDatabase {
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'customer',
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        address_street TEXT,
+        address_number TEXT,
+        address_complement TEXT,
+        address_district TEXT,
+        address_city TEXT,
+        address_state TEXT,
+        address_zip TEXT
       )
     ''');
     await db.execute('''
@@ -121,6 +131,51 @@ class AppDatabase {
     }
   }
 
+  static const _userAddressColumns = <String>[
+    'address_street',
+    'address_number',
+    'address_complement',
+    'address_district',
+    'address_city',
+    'address_state',
+    'address_zip',
+  ];
+
+  static const _orderShippingColumns = <String>[
+    'shipping_street',
+    'shipping_number',
+    'shipping_complement',
+    'shipping_district',
+    'shipping_city',
+    'shipping_state',
+    'shipping_zip',
+  ];
+
+  static Future<void> _migrateUserAndOrderAddress(DatabaseExecutor db) async {
+    await _addMissingTextColumns(db, 'users', _userAddressColumns);
+    await _addMissingTextColumns(db, 'orders', _orderShippingColumns);
+  }
+
+  static Future<void> _addMissingTextColumns(
+    DatabaseExecutor db,
+    String table,
+    List<String> columns,
+  ) async {
+    final tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      [table],
+    );
+    if (tables.isEmpty) return;
+
+    final cols = await db.rawQuery('PRAGMA table_info($table)');
+    final names = cols.map((c) => c['name'] as String).toSet();
+    for (final column in columns) {
+      if (!names.contains(column)) {
+        await db.execute('ALTER TABLE $table ADD COLUMN $column TEXT');
+      }
+    }
+  }
+
   static Future<void> _createCommerceSchema(DatabaseExecutor db) async {
     await db.execute('''
       CREATE TABLE cart_items (
@@ -141,6 +196,13 @@ class AppDatabase {
         created_at TEXT NOT NULL,
         payment_method TEXT,
         payment_last4 TEXT,
+        shipping_street TEXT,
+        shipping_number TEXT,
+        shipping_complement TEXT,
+        shipping_district TEXT,
+        shipping_city TEXT,
+        shipping_state TEXT,
+        shipping_zip TEXT,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');

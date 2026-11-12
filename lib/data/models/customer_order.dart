@@ -1,4 +1,5 @@
 import 'payment_info.dart';
+import 'shipping_address.dart';
 
 /// Status inicial de um pedido criado pelo cliente. A troca de status
 /// (US-008) fica fora do escopo mobile.
@@ -93,6 +94,7 @@ class OrderDetail {
     required this.items,
     this.paymentMethod,
     this.paymentLast4,
+    this.shippingAddress,
   });
 
   final int id;
@@ -103,6 +105,7 @@ class OrderDetail {
   final List<OrderItem> items;
   final PaymentMethod? paymentMethod;
   final String? paymentLast4;
+  final ShippingAddress? shippingAddress;
 
   String get statusLabel => orderStatusLabel(status);
 
