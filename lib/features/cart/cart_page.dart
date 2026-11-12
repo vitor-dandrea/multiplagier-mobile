@@ -4,6 +4,7 @@ import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/cart_line.dart';
 import '../../data/repositories/order_repository.dart';
+import '../auth/auth_controller.dart';
 import '../payment/payment_page.dart';
 import 'cart_controller.dart';
 
@@ -12,11 +13,13 @@ class CartPage extends StatelessWidget {
     super.key,
     required this.controller,
     required this.orderRepository,
+    required this.authController,
     required this.onOrderPlaced,
   });
 
   final CartController controller;
   final OrderRepository orderRepository;
+  final AuthController authController;
   final VoidCallback onOrderPlaced;
 
   Future<void> _checkout(BuildContext context) async {
@@ -25,6 +28,7 @@ class CartPage extends StatelessWidget {
         builder: (_) => PaymentPage(
           controller: controller,
           orderRepository: orderRepository,
+          authController: authController,
           onOrderPlaced: onOrderPlaced,
         ),
       ),

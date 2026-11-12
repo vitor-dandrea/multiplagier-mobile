@@ -5,6 +5,8 @@ import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/payment_info.dart';
 import '../../data/repositories/order_repository.dart';
+import '../account/account_page.dart';
+import '../auth/auth_controller.dart';
 import '../cart/cart_controller.dart';
 import '../orders/order_detail_page.dart';
 import 'payment_rules.dart';
@@ -15,11 +17,13 @@ class PaymentPage extends StatefulWidget {
     super.key,
     required this.controller,
     required this.orderRepository,
+    required this.authController,
     required this.onOrderPlaced,
   });
 
   final CartController controller;
   final OrderRepository orderRepository;
+  final AuthController authController;
   final VoidCallback onOrderPlaced;
 
   @override
@@ -49,6 +53,9 @@ class _PaymentPageState extends State<PaymentPage> {
     super.dispose();
   }
 
+  bool get _hasAddress =>
+      widget.authController.user?.hasCompleteAddress ?? false;
+
   PaymentInfo? _buildPayment() {
     if (_method == PaymentMethod.pix) {
       return const PaymentInfo.pix();
@@ -59,8 +66,21 @@ class _PaymentPageState extends State<PaymentPage> {
     return PaymentInfo.card(last4: last4);
   }
 
+  Future<void> _openAccount() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AccountPage(authController: widget.authController),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
+    if (!_hasAddress) {
+      setState(() => _error = CartController.missingAddressMessage);
+      return;
+    }
     final payment = _buildPayment();
     if (payment == null) return;
 
@@ -109,9 +129,13 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Pagamento')),
       body: ListenableBuilder(
-        listenable: widget.controller,
+        listenable: Listenable.merge([
+          widget.controller,
+          widget.authController,
+        ]),
         builder: (context, _) {
           final busy = _submitting || widget.controller.busy;
+          final addressOk = _hasAddress;
           return Column(
             children: [
               Expanded(
@@ -130,6 +154,13 @@ class _PaymentPageState extends State<PaymentPage> {
                         color: scheme.primary,
                         fontWeight: FontWeight.w800,
                       ),
+                    ),
+                    const SizedBox(height: 24),
+                    _ShippingCard(
+                      addressOk: addressOk,
+                      lines: widget.authController.user?.address?.formattedLines,
+                      enabled: !busy,
+                      onEdit: _openAccount,
                     ),
                     const SizedBox(height: 24),
                     Text('Forma de pagamento', style: theme.textTheme.titleMedium),
@@ -175,17 +206,6 @@ class _PaymentPageState extends State<PaymentPage> {
                       )
                     else
                       _PixPanel(code: _fakePixCode, total: total),
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        key: const Key('payment_error'),
-                        style: TextStyle(
-                          color: scheme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -195,23 +215,41 @@ class _PaymentPageState extends State<PaymentPage> {
                 child: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                    child: FilledButton(
-                      key: const Key('payment_submit'),
-                      onPressed: busy ? null : _submit,
-                      child: busy
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: scheme.onPrimary,
-                              ),
-                            )
-                          : Text(
-                              _method == PaymentMethod.pix
-                                  ? 'Confirmar pagamento'
-                                  : 'Pagar $total',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_error != null) ...[
+                          Text(
+                            _error!,
+                            key: const Key('payment_error'),
+                            style: TextStyle(
+                              color: scheme.error,
+                              fontWeight: FontWeight.w600,
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        FilledButton(
+                          key: const Key('payment_submit'),
+                          onPressed: busy || !addressOk ? null : _submit,
+                          child: busy
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: scheme.onPrimary,
+                                  ),
+                                )
+                              : Text(
+                                  !addressOk
+                                      ? 'Cadastre o endereço'
+                                      : _method == PaymentMethod.pix
+                                          ? 'Confirmar pagamento'
+                                          : 'Pagar $total',
+                                ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -219,6 +257,77 @@ class _PaymentPageState extends State<PaymentPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ShippingCard extends StatelessWidget {
+  const _ShippingCard({
+    required this.addressOk,
+    required this.lines,
+    required this.enabled,
+    required this.onEdit,
+  });
+
+  final bool addressOk;
+  final List<String>? lines;
+  final bool enabled;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      key: const Key('payment_shipping'),
+      color: AppColors.surfaceContainer,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.local_shipping_outlined, color: scheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Entregar em',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                TextButton(
+                  key: const Key('payment_edit_address'),
+                  onPressed: enabled ? onEdit : null,
+                  child: Text(addressOk ? 'Editar endereço' : 'Cadastrar'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (addressOk && lines != null)
+              for (final line in lines!)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    line,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+            else
+              Text(
+                key: const Key('payment_shipping_missing'),
+                'Cadastre seu endereço para continuar.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
