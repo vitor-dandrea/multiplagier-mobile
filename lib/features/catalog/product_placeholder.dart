@@ -21,8 +21,11 @@ class ProductPlaceholder extends StatelessWidget {
     final icon = _iconFor(category);
     final initials = _initials(name);
 
-    final isHero = size == ProductPlaceholderSize.hero;
-    final radius = isHero ? 16.0 : 12.0;
+    final radius = switch (size) {
+      ProductPlaceholderSize.hero => 16.0,
+      ProductPlaceholderSize.tile => 0.0,
+      ProductPlaceholderSize.avatar => 12.0,
+    };
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -39,21 +42,27 @@ class ProductPlaceholder extends StatelessWidget {
             )!,
           ],
         ),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: .6),
-        ),
+        border: size == ProductPlaceholderSize.tile
+            ? null
+            : Border.all(
+                color: scheme.outlineVariant.withValues(alpha: .6),
+              ),
       ),
       child: Center(
-        child: isHero
-            ? Icon(icon, size: 72, color: scheme.primary)
-            : Text(
-                initials,
-                style: TextStyle(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: size == ProductPlaceholderSize.avatar ? 14 : 18,
-                ),
+        child: switch (size) {
+          ProductPlaceholderSize.hero =>
+            Icon(icon, size: 72, color: scheme.primary),
+          ProductPlaceholderSize.tile =>
+            Icon(icon, size: 44, color: scheme.primary),
+          ProductPlaceholderSize.avatar => Text(
+              initials,
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
               ),
+            ),
+        },
       ),
     );
   }

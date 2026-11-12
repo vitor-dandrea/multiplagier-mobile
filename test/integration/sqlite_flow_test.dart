@@ -75,11 +75,16 @@ void main() {
     await tester.tap(find.byKey(const Key('login_submit')));
     await pumpUntilFound(tester, find.byKey(const Key('catalog_list')));
 
+    // Grade 2 colunas só monta itens visíveis; amplia a superfície do teste.
+    await tester.binding.setSurfaceSize(const Size(420, 1400));
+    await tester.pumpAndSettle();
+
     expect(find.text('Olá, Cliente Demo'), findsOneWidget);
     expect(find.text('Smart TV 50" 4K'), findsOneWidget);
     expect(find.text('R\$ 2.499,00'), findsOneWidget);
     expect(find.text('Produto Descontinuado'), findsNothing);
 
+    await tester.binding.setSurfaceSize(null);
     await tester.runAsync(() => database.close());
   });
 }
