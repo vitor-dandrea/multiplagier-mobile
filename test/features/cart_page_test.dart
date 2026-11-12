@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/data/models/cart_line.dart';
+import 'package:multiplagier_mobile/data/models/payment_info.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:multiplagier_mobile/features/cart/cart_controller.dart';
 import 'package:multiplagier_mobile/features/cart/cart_page.dart';
@@ -15,6 +16,14 @@ const _line = CartLine(
   stock: 1,
   isActive: true,
 );
+
+Future<void> _payWithPix(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('payment_method_pix')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('payment_submit')));
+  await tester.pump(const Duration(milliseconds: 700));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   late FakeCartRepository cart;
@@ -97,12 +106,14 @@ void main() {
     expect(find.byKey(const Key('cart_empty')), findsOneWidget);
   });
 
-  testWidgets('cancelar a confirmação não cria pedido', (tester) async {
+  testWidgets('voltar do pagamento não cria pedido', (tester) async {
     await pumpCart(tester);
 
     await tester.tap(find.byKey(const Key('cart_checkout')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('confirm_order_cancel')));
+    expect(find.byKey(const Key('payment_submit')), findsOneWidget);
+
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     expect(orders.placeCalls, 0);
@@ -110,19 +121,21 @@ void main() {
     expect(find.byKey(const Key('cart_list')), findsOneWidget);
   });
 
-  testWidgets('confirmar a compra abre o pedido', (tester) async {
+  testWidgets('pagar com Pix abre o pedido', (tester) async {
     await pumpCart(tester);
 
     await tester.tap(find.byKey(const Key('cart_checkout')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('confirm_order')));
-    await tester.pumpAndSettle();
+    await _payWithPix(tester);
 
     expect(ordersPlaced, 1);
+    expect(orders.lastPayment?.method, PaymentMethod.pix);
     expect(find.byKey(const Key('order_status')), findsOneWidget);
     expect(find.text('Pendente'), findsOneWidget);
     expect(find.text('Fone Bluetooth'), findsOneWidget);
     expect(find.text('Pedido #1'), findsOneWidget);
+    expect(find.byKey(const Key('order_payment')), findsOneWidget);
+    expect(find.textContaining('Pix'), findsOneWidget);
   });
 
   testWidgets('compra recusada permanece no carrinho com mensagem clara', (
@@ -133,14 +146,16 @@ void main() {
 
     await tester.tap(find.byKey(const Key('cart_checkout')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('confirm_order')));
-    await tester.pumpAndSettle();
+    await _payWithPix(tester);
 
-    expect(find.byKey(const Key('cart_list')), findsOneWidget);
+    expect(find.byKey(const Key('payment_error')), findsOneWidget);
     expect(
       find.text(CartController.unavailableCheckoutMessage),
       findsOneWidget,
     );
     expect(ordersPlaced, 0);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cart_list')), findsOneWidget);
   });
 }

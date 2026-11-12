@@ -1,5 +1,6 @@
 import 'package:multiplagier_mobile/data/models/cart_line.dart';
 import 'package:multiplagier_mobile/data/models/customer_order.dart';
+import 'package:multiplagier_mobile/data/models/payment_info.dart';
 import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 
@@ -106,12 +107,14 @@ class FakeOrderRepository implements OrderRepository {
   bool throwOnFind = false;
   PlaceOrderFailure? failNext;
   int placeCalls = 0;
+  PaymentInfo? lastPayment;
   final List<int> deniedOrderIds = [];
   int _nextId = 1;
 
   @override
-  Future<PlaceOrderOutcome> placeOrder(int userId) async {
+  Future<PlaceOrderOutcome> placeOrder(int userId, PaymentInfo payment) async {
     placeCalls++;
+    lastPayment = payment;
     if (throwOnPlace) throw StateError('falha interna sensível');
     final failure = failNext;
     failNext = null;
@@ -142,6 +145,8 @@ class FakeOrderRepository implements OrderRepository {
       status: orderStatusPending,
       totalCents: total,
       items: items,
+      paymentMethod: payment.method,
+      paymentLast4: payment.last4,
     );
     orders.add(order);
     cart?.lines.clear();
@@ -159,6 +164,8 @@ class FakeOrderRepository implements OrderRepository {
             createdAt: order.createdAt,
             status: order.status,
             totalCents: order.totalCents,
+            paymentMethod: order.paymentMethod,
+            paymentLast4: order.paymentLast4,
           ),
     ];
   }

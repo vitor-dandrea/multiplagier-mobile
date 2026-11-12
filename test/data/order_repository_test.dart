@@ -4,6 +4,7 @@ import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
+import 'package:multiplagier_mobile/data/models/payment_info.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -76,7 +77,7 @@ void main() {
         await cart.add(demo, mouseId);
         await cart.add(ana.id, foneId);
 
-        final outcome = await orders.placeOrder(demo);
+        final outcome = await orders.placeOrder(demo, const PaymentInfo.pix());
 
         expect(outcome.failure, isNull);
         final order = outcome.order!;
@@ -111,7 +112,7 @@ void main() {
         whereArgs: [foneId],
       );
 
-      final order = (await orders.placeOrder(demo)).order!;
+      final order = (await orders.placeOrder(demo, const PaymentInfo.pix())).order!;
       expect(order.totalCents, 1000);
       expect(order.items.single.unitPriceCents, 1000);
       expect(order.items.single.productName, 'Fone de Ouvido Bluetooth');
@@ -128,7 +129,7 @@ void main() {
     });
 
     test('carrinho vazio não cria pedido', () async {
-      final outcome = await orders.placeOrder(await demoId());
+      final outcome = await orders.placeOrder(await demoId(), const PaymentInfo.pix());
       expect(outcome.failure, PlaceOrderFailure.emptyCart);
       expect(await database.db.query('orders'), isEmpty);
     });
@@ -148,7 +149,7 @@ void main() {
         whereArgs: [mouseId],
       );
 
-      final outcome = await orders.placeOrder(demo);
+      final outcome = await orders.placeOrder(demo, const PaymentInfo.pix());
 
       expect(outcome.failure, PlaceOrderFailure.unavailable);
       expect(await database.db.query('orders'), isEmpty);
@@ -164,12 +165,30 @@ void main() {
       final productId = fone['id'] as int;
 
       await cart.add(demo, productId);
-      final first = (await orders.placeOrder(demo)).order!;
+      final first = (await orders.placeOrder(demo, const PaymentInfo.pix())).order!;
       await cart.add(demo, productId);
-      final second = (await orders.placeOrder(demo)).order!;
+      final second = (await orders.placeOrder(demo, const PaymentInfo.pix())).order!;
 
       final listed = await orders.listForUser(demo);
       expect(listed.map((order) => order.id), [second.id, first.id]);
+    });
+
+    test('persiste método de pagamento e last4 do cartão', () async {
+      final demo = await demoId();
+      final fone = await productNamed('Fone de Ouvido Bluetooth');
+      await cart.add(demo, fone['id'] as int);
+
+      final order = (await orders.placeOrder(
+        demo,
+        const PaymentInfo.card(last4: '1111'),
+      )).order!;
+
+      expect(order.paymentMethod, PaymentMethod.card);
+      expect(order.paymentLast4, '1111');
+      expect(order.paymentLabel, 'Cartão •••• 1111');
+
+      final loaded = await orders.findForUser(demo, order.id);
+      expect(loaded!.paymentLabel, 'Cartão •••• 1111');
     });
   });
 
@@ -183,7 +202,7 @@ void main() {
       )).user!;
       final fone = await productNamed('Fone de Ouvido Bluetooth');
       await cart.add(demo, fone['id'] as int);
-      final order = (await orders.placeOrder(demo)).order!;
+      final order = (await orders.placeOrder(demo, const PaymentInfo.pix())).order!;
 
       final own = await orders.findForUser(demo, order.id);
       expect(own?.items.single.productName, 'Fone de Ouvido Bluetooth');

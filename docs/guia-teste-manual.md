@@ -356,7 +356,7 @@ Partindo do Catálogo logado:
 | T5.1 | Abra **Fone de Ouvido Bluetooth** | Nome, preço R$ 189,90, descrição, botão adicionar | ☐ |
 | T5.2 | **Adicionar ao carrinho** | Feedback de sucesso (sem erro) | ☐ |
 | T5.3 | Volte / abra **Carrinho** | Item Fone; total coerente | ☐ |
-| T5.4 | **Finalizar pedido** → **Confirmar** | Vai ao detalhe do pedido (ex.: Pedido #1, Pendente) | ☐ |
+| T5.4 | **Finalizar pedido** → tela **Pagamento** (Cartão ou Pix) → **Pagar** / **Confirmar pagamento** | Vai ao detalhe do pedido (ex.: Pedido #1, Pendente) com método de pagamento | ☐ |
 | T5.5 | Volte e abra **Pedidos** | Lista com o pedido criado | ☐ |
 | T5.6 | Abra o pedido na lista | Mesmos itens/total | ☐ |
 | T5.7 | (Opcional) Tente tablet sem estoque no detalhe | Não deve permitir compra normal / indica indisponível | ☐ |

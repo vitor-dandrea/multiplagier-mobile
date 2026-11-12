@@ -174,14 +174,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await capture('06-carrinho');
 
-    // 7. Pedido confirmado
+    // 7. Pagamento + pedido confirmado
     await tester.ensureVisible(find.byKey(const Key('cart_checkout')));
     await tester.tap(find.byKey(const Key('cart_checkout')));
-    await _pumpUntilFound(tester, find.byKey(const Key('confirm_order')));
-    await tester.tap(find.byKey(const Key('confirm_order')));
+    await _pumpUntilFound(tester, find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await capture('07-pagamento');
+    await tester.tap(find.byKey(const Key('payment_method_pix')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 700));
     await _pumpUntilFound(tester, find.byKey(const Key('order_status')));
     await tester.pump(const Duration(milliseconds: 500));
-    await capture('07-pedido');
+    await capture('08-pedido');
 
     await tester.runAsync(() => database.close());
   });

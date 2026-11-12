@@ -123,8 +123,11 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('cart_checkout')));
-    await pumpUntilFound(tester, find.byKey(const Key('confirm_order')));
-    await tester.tap(find.byKey(const Key('confirm_order')));
+    await pumpUntilFound(tester, find.byKey(const Key('payment_submit')));
+    await tester.tap(find.byKey(const Key('payment_method_pix')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 700));
     await pumpUntilFound(tester, find.byKey(const Key('order_status')));
     expect(find.text('Pendente'), findsOneWidget);
     expect(find.text('Pedido #1'), findsOneWidget);
