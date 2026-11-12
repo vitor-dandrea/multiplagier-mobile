@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
 import 'catalog_filter.dart';
+import 'product_placeholder.dart';
 
 /// Lista de produtos ativos (US-003) com busca e filtro por categoria (US-009).
 class ProductListPage extends StatefulWidget {
@@ -156,12 +158,14 @@ class _ProductListPageState extends State<ProductListPage> {
                       message: ProductListPage.noMatchMessage,
                     )
                   : RefreshIndicator(
+                      color: Theme.of(context).colorScheme.primary,
                       onRefresh: _refresh,
                       child: ListView.separated(
                         key: const Key('catalog_list'),
                         physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) => _ProductTile(
                           product: visible[index],
                           onTap: () => widget.onProductTap(visible[index]),
@@ -185,34 +189,63 @@ class _ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final status = AppStatusColors.of(context);
     final available = product.isAvailable;
 
-    return ListTile(
+    return Material(
       key: Key('product_tile_${product.id}'),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primaryContainer,
-        foregroundColor: theme.colorScheme.onPrimaryContainer,
-        child: const Icon(Icons.devices_other),
-      ),
-      title: Text(
-        product.name,
-        style: theme.textTheme.titleMedium,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        '${product.category} · ${available ? 'Em estoque' : 'Indisponível'}',
-        style: TextStyle(
-          color: available ? Colors.green.shade800 : theme.colorScheme.error,
-        ),
-      ),
-      trailing: Text(
-        formatBrl(product.priceCents),
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.primary,
+      color: AppColors.surfaceContainer,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: ProductPlaceholder(
+                  category: product.category,
+                  name: product.name,
+                  size: ProductPlaceholderSize.tile,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${product.category} · '
+                      '${available ? 'Em estoque' : 'Indisponível'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: available ? status.success : scheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                formatBrl(product.priceCents),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
