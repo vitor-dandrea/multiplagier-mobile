@@ -38,6 +38,7 @@ Emulador Android validado em **05/11/2026** (AVD `Pixel_6_API_35`).
 | [Instalação](docs/instalacao.md) | Ambiente Windows, emulador e primeiros passos |
 | [Segurança](docs/seguranca.md) | PBKDF2, sessão, SEC-001, SEC-003 e regras de senha |
 | [Fluxo Git](docs/git-fluxo.md) | Branches `main` / `dev` / `feat` e commits atômicos |
+| [Guia de teste manual](docs/guia-teste-manual.md) | Emulador, USB e Wi‑Fi: comandos, credenciais e checklist offline |
 
 ## Usuário de demonstração
 

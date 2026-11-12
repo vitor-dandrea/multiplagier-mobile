@@ -8,7 +8,8 @@
     "relatorio:23-10": "node gerar-relatorios-23-10.mjs",
     "relatorio:05-11": "node gerar-relatorio-acompanhamento-05-11.mjs",
     "modelo:extensao": "node gerar-modelo-projeto-extensao.mjs",
-    "doc:final": "node gerar-documentacao-final-moveis.mjs"
+    "doc:final": "node gerar-documentacao-final-moveis.mjs",
+    "guia:manual": "node gerar-guia-teste-manual.mjs"
   },
   "dependencies": {
     "docx": "^9.8.1"
