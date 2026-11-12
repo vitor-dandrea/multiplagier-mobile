@@ -1,12 +1,19 @@
 # Multiplagier Mobile
 
-Versão mobile (Flutter) do **Multiplagier**, e-commerce acadêmico de eletrônicos e acessórios da disciplina **ISG022 — Segurança no Desenvolvimento de Aplicações** (FATEC Mauá, 2026/2).
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 
-O web (Laravel) fica em [vitor-dandrea/multiplagier](https://github.com/vitor-dandrea/multiplagier) e serve apenas como referência de domínio: perfis, backlog e critérios de aceite.
+App mobile acadêmico de e-commerce (eletrônicos e acessórios) da disciplina **ISG022 — Segurança no Desenvolvimento de Aplicações**, FATEC Mauá, 2026/2.
+
+Referência de domínio (web Laravel): [vitor-dandrea/multiplagier](https://github.com/vitor-dandrea/multiplagier).
+
+## Galeria
+
+| Catálogo | Cadastro | Carrinho | Pedido |
+|----------|----------|----------|--------|
+| ![Catálogo](docs/evidencias/03-catalogo.png) | ![Cadastro](docs/evidencias/05-cadastro.png) | ![Carrinho](docs/evidencias/06-carrinho.png) | ![Pedido](docs/evidencias/07-pedido.png) |
 
 ## Status
-
-MVP em construção. Escopo atual:
 
 | Funcionalidade | Status |
 |----------------|--------|
@@ -20,62 +27,44 @@ MVP em construção. Escopo atual:
 | Busca e filtro do catálogo (US-009) | Concluído |
 | Sincronização com API | Não iniciado |
 
-## Stack
+Emulador Android validado em **05/11/2026** (AVD `Pixel_6_API_35`).
 
-- Flutter / Dart
-- SQLite local: `sqflite` (Android) e `sqflite_common_ffi` (desktop e testes)
-- `crypto` para hash de senha (PBKDF2-HMAC-SHA256 com salt)
-- `shared_preferences` para a sessão
+## Documentação
 
-## Como executar
-
-Pré-requisito: [Flutter SDK](https://docs.flutter.dev/get-started/install) estável, em um caminho **sem espaços** (o build nativo do `sqlite3` falha com espaços no caminho do SDK).
-
-```bash
-flutter pub get
-flutter run            # dispositivo/emulador Android ou Windows
-flutter test           # testes unitários e de widget
-flutter analyze
-```
-
-No Windows, o suporte a plugins exige o **Modo de Desenvolvedor** ativo (`start ms-settings:developers`).
+| Documento | Conteúdo |
+|-----------|----------|
+| [Arquitetura](docs/arquitetura.md) | Camadas, repositórios, SQLite e diagrama |
+| [Padrões de projeto](docs/design-patterns.md) | Repository, Observer, Factory e tipos de resultado |
+| [Instalação](docs/instalacao.md) | Ambiente Windows, emulador e primeiros passos |
+| [Segurança](docs/seguranca.md) | PBKDF2, sessão, SEC-001, SEC-003 e regras de senha |
+| [Fluxo Git](docs/git-fluxo.md) | Branches `main` / `dev` / `feat` e commits atômicos |
+| [Guia de teste manual](docs/guia-teste-manual.md) | Emulador, USB e Wi‑Fi: comandos, credenciais e checklist offline |
 
 ## Usuário de demonstração
 
-O banco é criado e populado na primeira execução.
+O banco SQLite é criado e populado na primeira execução.
 
 | Campo | Valor |
 |-------|-------|
 | E-mail | `cliente@multiplagier.local` |
 | Senha | `Multiplagier@2026` |
 
-São semeados 5 produtos ativos e 1 inativo (usado para provar o filtro do catálogo).
+## Quick start
 
-Novas contas são criadas em **Criar conta**. A senha precisa ter pelo menos 8 caracteres, com letras e números, e fica armazenada só como hash. Depois do cadastro a sessão já entra no catálogo. Carrinho e pedidos ficam no SQLite, separados por usuário.
-
-O login bloqueia o e-mail por 1 minuto após 5 tentativas inválidas (SEC-003). No catálogo dá para buscar por texto e filtrar por categoria (US-009).
-
-## Arquitetura
-
-```text
-lib/
-  main.dart            # bootstrap (factory SQLite por plataforma)
-  app.dart             # MaterialApp
-  core/                # tema, validação, formato e segurança (hash de senha)
-  data/db/             # AppDatabase, schema e seed
-  features/            # auth, catalog, cart e orders (por funcionalidade)
+```bash
+flutter pub get
+flutter run
+flutter test
 ```
 
-## Relatório de status e evidências
+## Ferramentas necessárias
 
-- Relatório de 02/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile.docx` (`cd docs && npm install && npm run relatorio`).
-- Continuação de 23/10/2026: `docs/Relatorio_Status_Multiplagier_Mobile_23-10-2026.docx`.
-- Relatório de acompanhamento da atividade: `docs/Relatorio_Acompanhamento_23-10-2026.docx` (`npm run relatorio:23-10` gera os dois de 23/10).
-- Capturas de tela em `docs/evidencias/`, geradas por `flutter test tool/screenshots/capture_screens_test.dart` (renderização do app via teste de widget, não é print de emulador).
-
-## Fluxo de Git
-
-- `main`: branch estável, **não recebe commits de trabalho nesta fase**.
-- `dev`: integração; todo o desenvolvimento entra aqui.
-- Branches de trabalho (`feat/`, `fix/`, `imp/`, `chore/`, `refac/`, `docs/`) são criadas a partir de `dev` e voltam apenas para `dev`.
-- Commits atômicos, uma preocupação por commit.
+| Ferramenta | Observação |
+|------------|------------|
+| **Flutter SDK** | Instalar em `C:\flutter` (**sem espaços** no caminho; o build nativo do `sqlite3` falha com espaços) |
+| **Android Studio** | IDE e ferramentas do Android |
+| **Android SDK** | Em `C:\Android\Sdk` |
+| **AVD** | Emulador `Pixel_6_API_35` (validado em 05/11/2026) |
+| **Modo de Desenvolvedor (Windows)** | Necessário para plugins Flutter no Windows (`start ms-settings:developers`) |
+| **Node.js** | Apenas para gerar relatórios Word em `docs/` (`cd docs && npm install && npm run relatorio`) |
+| **Git / gh** | Controle de versão e PRs no GitHub |
