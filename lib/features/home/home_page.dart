@@ -136,7 +136,10 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 'Olá, ${widget.user.name}',
                 key: const Key('home_greeting'),
-                style: theme.textTheme.titleMedium,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),

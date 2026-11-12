@@ -86,6 +86,7 @@ class _OrderBody extends StatelessWidget {
           key: const Key('order_status'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
+            color: theme.colorScheme.tertiary,
           ),
         ),
         const SizedBox(height: 24),
@@ -98,8 +99,16 @@ class _OrderBody extends StatelessWidget {
             title: Text(item.productName),
             subtitle: Text(
               '${item.quantity} × ${formatBrl(item.unitPriceCents)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            trailing: Text(formatBrl(item.lineTotalCents)),
+            trailing: Text(
+              formatBrl(item.lineTotalCents),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           const Divider(height: 1),
         ],
