@@ -89,6 +89,17 @@ class _OrderBody extends StatelessWidget {
             color: theme.colorScheme.tertiary,
           ),
         ),
+        if (order.paymentLabel != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Pagamento: ${order.paymentLabel}',
+            key: const Key('order_payment'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         Text('Itens', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),

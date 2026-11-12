@@ -4,7 +4,7 @@ import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/cart_line.dart';
 import '../../data/repositories/order_repository.dart';
-import '../orders/order_detail_page.dart';
+import '../payment/payment_page.dart';
 import 'cart_controller.dart';
 
 class CartPage extends StatelessWidget {
@@ -20,40 +20,12 @@ class CartPage extends StatelessWidget {
   final VoidCallback onOrderPlaced;
 
   Future<void> _checkout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        key: const Key('confirm_order_dialog'),
-        title: const Text('Finalizar pedido'),
-        content: Text(
-          'Confirmar a compra de ${formatBrl(controller.totalCents)}?',
-        ),
-        actions: [
-          TextButton(
-            key: const Key('confirm_order_cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            key: const Key('confirm_order'),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    final orderId = await controller.checkout();
-    if (!context.mounted || orderId == null) return;
-
-    onOrderPlaced();
-    await Navigator.of(context).pushReplacement(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => OrderDetailPage(
-          repository: orderRepository,
-          userId: controller.userId,
-          orderId: orderId,
+        builder: (_) => PaymentPage(
+          controller: controller,
+          orderRepository: orderRepository,
+          onOrderPlaced: onOrderPlaced,
         ),
       ),
     );
