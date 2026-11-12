@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/core/security/password_hasher.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
+import 'package:multiplagier_mobile/data/models/shipping_address.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -167,6 +168,52 @@ void main() {
       expect(tables, isNotEmpty);
       final stored = await repository.findById(outcome.user!.id);
       expect(stored?.name, payload);
+    });
+  });
+
+  group('SqliteAuthRepository.updateProfile', () {
+    test('atualiza nome e endereço sem mudar e-mail', () async {
+      final demo = await repository.authenticate(demoUserEmail, demoUserPassword);
+      final outcome = await repository.updateProfile(
+        userId: demo!.id,
+        name: 'Cliente Atualizado',
+        address: const ShippingAddress(
+          street: 'Av. Brasil',
+          number: '500',
+          district: 'Jardim',
+          city: 'Santo André',
+          state: 'sp',
+          zip: '09000-123',
+        ),
+      );
+
+      expect(outcome.failure, isNull);
+      expect(outcome.user!.name, 'Cliente Atualizado');
+      expect(outcome.user!.email, demoUserEmail);
+      expect(outcome.user!.address!.city, 'Santo André');
+      expect(outcome.user!.address!.state, 'SP');
+      expect(outcome.user!.address!.zip, '09000123');
+
+      final loaded = await repository.findById(demo.id);
+      expect(loaded!.name, 'Cliente Atualizado');
+      expect(loaded.hasCompleteAddress, isTrue);
+    });
+
+    test('rejeita endereço incompleto', () async {
+      final demo = await repository.authenticate(demoUserEmail, demoUserPassword);
+      final outcome = await repository.updateProfile(
+        userId: demo!.id,
+        name: 'Cliente Demo',
+        address: const ShippingAddress(
+          street: 'Rua X',
+          number: '1',
+          district: '',
+          city: 'Mauá',
+          state: 'SP',
+          zip: '09310000',
+        ),
+      );
+      expect(outcome.failure, ProfileUpdateFailure.invalidAddress);
     });
   });
 }

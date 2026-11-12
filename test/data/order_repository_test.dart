@@ -190,6 +190,36 @@ void main() {
       final loaded = await orders.findForUser(demo, order.id);
       expect(loaded!.paymentLabel, 'Cartão •••• 1111');
     });
+
+    test('congela endereço de entrega no pedido', () async {
+      final demo = await demoId();
+      final fone = await productNamed('Fone de Ouvido Bluetooth');
+      await cart.add(demo, fone['id'] as int);
+
+      final order =
+          (await orders.placeOrder(demo, const PaymentInfo.pix())).order!;
+      expect(order.shippingAddress, isNotNull);
+      expect(order.shippingAddress!.street, 'Rua das Flores');
+      expect(order.shippingAddress!.zip, '09310000');
+
+      final loaded = await orders.findForUser(demo, order.id);
+      expect(loaded!.shippingAddress!.city, 'Mauá');
+      expect(loaded.shippingAddress!.singleLine, contains('Rua das Flores'));
+    });
+
+    test('recusa checkout sem endereço completo', () async {
+      final ana = (await auth.register(
+        name: 'Ana Silva',
+        email: 'ana.sem.endereco@example.com',
+        password: 'Senha1234',
+      )).user!;
+      final fone = await productNamed('Fone de Ouvido Bluetooth');
+      await cart.add(ana.id, fone['id'] as int);
+
+      final outcome = await orders.placeOrder(ana.id, const PaymentInfo.pix());
+      expect(outcome.failure, PlaceOrderFailure.missingAddress);
+      expect(outcome.order, isNull);
+    });
   });
 
   group('SEC-001 acesso ao pedido', () {

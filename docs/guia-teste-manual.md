@@ -73,6 +73,7 @@ Se `adb` ou `java` falharem, o bloco do passo 3 não foi aplicado nesta janela �
 | E-mail | `cliente@multiplagier.local` |
 | Senha | `Multiplagier@2026` |
 | Nome exibido | Cliente Demo |
+| Endereço (seed) | Rua das Flores, 100 — Centro — Mauá/SP — CEP 09310-000 |
 
 ### Conta nova (cadastro — invente um e-mail único)
 
@@ -349,17 +350,17 @@ Partindo do Catálogo logado:
 
 ---
 
-### T5 — Detalhe, carrinho e pedido
+### T5 — Conta, endereço, carrinho e pedido
 
 | # | Ação | Resultado esperado | OK? |
 |---|------|--------------------|-----|
-| T5.1 | Abra **Fone de Ouvido Bluetooth** | Nome, preço R$ 189,90, descrição, botão adicionar | ☐ |
-| T5.2 | **Adicionar ao carrinho** | Feedback de sucesso (sem erro) | ☐ |
-| T5.3 | Volte / abra **Carrinho** | Item Fone; total coerente | ☐ |
-| T5.4 | **Finalizar pedido** → tela **Pagamento** (Cartão ou Pix) → **Pagar** / **Confirmar pagamento** | Vai ao detalhe do pedido (ex.: Pedido #1, Pendente) com método de pagamento | ☐ |
-| T5.5 | Volte e abra **Pedidos** | Lista com o pedido criado | ☐ |
-| T5.6 | Abra o pedido na lista | Mesmos itens/total | ☐ |
-| T5.7 | (Opcional) Tente tablet sem estoque no detalhe | Não deve permitir compra normal / indica indisponível | ☐ |
+| T5.1 | Ícone de **conta** (AppBar) | Tela **Minha conta** com nome, e-mail (somente leitura) e endereço | ☐ |
+| T5.2 | Altere o nome ou o endereço → **Salvar** | Mensagem `Dados salvos.`; cumprimento no Home atualiza o nome | ☐ |
+| T5.3 | Abra **Fone de Ouvido Bluetooth** → **Adicionar ao carrinho** | Feedback de sucesso | ☐ |
+| T5.4 | **Carrinho** → **Finalizar pedido** | Tela **Pagamento** com card **Entregar em** (endereço do perfil) | ☐ |
+| T5.5 | Pix ou Cartão → **Confirmar** / **Pagar** | Detalhe do pedido com pagamento **e** bloco **Entrega** | ☐ |
+| T5.6 | Conta **nova** sem endereço: tente pagar | Botão bloqueado / pede cadastrar endereço; após salvar, libera | ☐ |
+| T5.7 | **Pedidos** → abrir o pedido | Itens, total, pagamento e endereço congelados | ☐ |
 
 ---
 
@@ -367,10 +368,10 @@ Partindo do Catálogo logado:
 
 | # | Ação | Resultado esperado | OK? |
 |---|------|--------------------|-----|
-| T6.1 | **Sair** → **Criar conta** | Tela Criar conta | ☐ |
+| T6.1 | Conta → **Sair** → **Criar conta** | Tela Criar conta | ☐ |
 | T6.2 | Senha só `abcdef` → Cadastrar | Erro de senha fraca | ☐ |
 | T6.3 | Preencha nome, e-mail **novo**, senha `SenhaForte1` (e confirmação) | Entra no Catálogo já logado | ☐ |
-| T6.4 | **Sair** e tente cadastrar o **mesmo** e-mail | `Este e-mail já está cadastrado.` | ☐ |
+| T6.4 | Conta → **Sair** e tente cadastrar o **mesmo** e-mail | `Este e-mail já está cadastrado.` | ☐ |
 | T6.5 | Login com a conta nova | Catálogo; carrinho/pedidos dessa conta (não mistura com demo) | ☐ |
 
 ---
@@ -380,7 +381,7 @@ Partindo do Catálogo logado:
 | # | Ação | Resultado esperado | OK? |
 |---|------|--------------------|-----|
 | T7.1 | Logado → fechar o app pelo botão recentes e reabrir o ícone | Se a sessão persistiu: volta logado (id salvo); senão: tela Entrar | ☐ |
-| T7.2 | **Sair** | Tela Entrar; não vê catálogo | ☐ |
+| T7.2 | Ícone **conta** → **Sair** | Tela Entrar; não vê catálogo | ☐ |
 
 (Com `flutter run` ativo, preferir testar logout pela UI; `R` no terminal zera throttle em memória.)
 

@@ -3,10 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/data/models/cart_line.dart';
 import 'package:multiplagier_mobile/data/models/payment_info.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
+import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
 import 'package:multiplagier_mobile/features/cart/cart_controller.dart';
 import 'package:multiplagier_mobile/features/cart/cart_page.dart';
 
 import '../support/fake_commerce.dart';
+import '../support/fakes.dart';
 
 const _line = CartLine(
   productId: 2,
@@ -29,6 +31,7 @@ void main() {
   late FakeCartRepository cart;
   late FakeOrderRepository orders;
   late CartController controller;
+  late AuthController auth;
   var ordersPlaced = 0;
 
   Future<void> pumpCart(WidgetTester tester) async {
@@ -38,6 +41,7 @@ void main() {
         home: CartPage(
           controller: controller,
           orderRepository: orders,
+          authController: auth,
           onOrderPlaced: () => ordersPlaced++,
         ),
       ),
@@ -45,7 +49,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  setUp(() {
+  setUp(() async {
     ordersPlaced = 0;
     cart = FakeCartRepository(lines: const [_line]);
     orders = FakeOrderRepository(cart: cart);
@@ -54,6 +58,11 @@ void main() {
       orderRepository: orders,
       userId: 4,
     );
+    auth = AuthController(
+      repository: FakeAuthRepository(),
+      sessionStore: MemorySessionStore(),
+    );
+    await auth.login('cliente@multiplagier.local', 'Multiplagier@2026');
   });
 
   testWidgets('carrinho vazio explica o estado e não oferece checkout', (

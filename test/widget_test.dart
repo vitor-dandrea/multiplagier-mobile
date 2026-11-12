@@ -85,8 +85,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('catalog_list')), findsOneWidget);
 
-    // Logout
-    await tester.tap(find.byKey(const Key('logout_button')));
+    // Logout via conta
+    await tester.tap(find.byKey(const Key('account_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('account_logout')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
     expect(find.byKey(const Key('catalog_list')), findsNothing);
