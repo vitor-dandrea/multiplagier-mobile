@@ -5,6 +5,7 @@ import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
 import 'catalog_filter.dart';
+import 'product_image.dart';
 import 'product_placeholder.dart';
 
 /// Lista de produtos ativos (US-003) com busca e filtro por categoria (US-009).
@@ -211,9 +212,8 @@ class _ProductTile extends StatelessWidget {
           children: [
             Expanded(
               flex: 5,
-              child: ProductPlaceholder(
-                category: product.category,
-                name: product.name,
+              child: ProductImage(
+                product: product,
                 size: ProductPlaceholderSize.tile,
               ),
             ),
