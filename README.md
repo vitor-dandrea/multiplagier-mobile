@@ -9,9 +9,13 @@ Referência de domínio (web Laravel): [vitor-dandrea/multiplagier](https://gith
 
 ## Galeria
 
-| Catálogo | Cadastro | Carrinho | Pedido |
-|----------|----------|----------|--------|
-| ![Catálogo](docs/evidencias/03-catalogo.png) | ![Cadastro](docs/evidencias/05-cadastro.png) | ![Carrinho](docs/evidencias/06-carrinho.png) | ![Pedido](docs/evidencias/07-pedido.png) |
+| Login | Catálogo | Conta |
+|-------|----------|-------|
+| ![Login](docs/evidencias/galeria/01-login.png) | ![Catálogo](docs/evidencias/galeria/03-catalogo.png) | ![Conta](docs/evidencias/galeria/09-conta.png) |
+
+| Detalhe | Carrinho | Pagamento | Pedido |
+|---------|----------|-----------|--------|
+| ![Detalhe](docs/evidencias/galeria/04-detalhe.png) | ![Carrinho](docs/evidencias/galeria/06-carrinho.png) | ![Pagamento](docs/evidencias/galeria/07-pagamento.png) | ![Pedido](docs/evidencias/galeria/08-pedido.png) |
 
 ## Status
 
@@ -20,14 +24,17 @@ Referência de domínio (web Laravel): [vitor-dandrea/multiplagier](https://gith
 | Configuração inicial (Flutter + SQLite + seed) | Concluído |
 | Login local (login, logout, restauração de sessão) | Concluído |
 | Catálogo (lista e detalhe de produtos ativos) | Concluído |
+| Fotos de produto offline | Concluído |
 | Cadastro de cliente (US-001) | Concluído |
+| Conta do cliente (nome + endereço de entrega) | Concluído |
 | Carrinho local | Concluído |
+| Pagamento simulado (cartão / Pix) no checkout | Concluído |
 | Pedidos do cliente (US-006, US-007, SEC-001) | Concluído |
 | Limite de tentativas de login (SEC-003) | Concluído |
 | Busca e filtro do catálogo (US-009) | Concluído |
 | Sincronização com API | Não iniciado |
 
-Emulador Android validado em **05/11/2026** (AVD `Pixel_6_API_35`).
+Emulador Android validado em **13/11/2026** (AVD `Pixel_6_API_35`).
 
 ## Documentação
 
@@ -36,7 +43,7 @@ Emulador Android validado em **05/11/2026** (AVD `Pixel_6_API_35`).
 | [Arquitetura](docs/arquitetura.md) | Camadas, repositórios, SQLite e diagrama |
 | [Padrões de projeto](docs/design-patterns.md) | Repository, Observer, Factory e tipos de resultado |
 | [Instalação](docs/instalacao.md) | Ambiente Windows, emulador e primeiros passos |
-| [Segurança](docs/seguranca.md) | PBKDF2, sessão, SEC-001, SEC-003 e regras de senha |
+| [Segurança](docs/seguranca.md) | PBKDF2, sessão, SEC-001, SEC-003, checkout e perfil |
 | [Fluxo Git](docs/git-fluxo.md) | Branches `main` / `dev` / `feat` e commits atômicos |
 | [Guia de teste manual](docs/guia-teste-manual.md) | Emulador, USB e Wi‑Fi: comandos, credenciais e checklist offline |
 
@@ -64,7 +71,7 @@ flutter test
 | **Flutter SDK** | Instalar em `C:\flutter` (**sem espaços** no caminho; o build nativo do `sqlite3` falha com espaços) |
 | **Android Studio** | IDE e ferramentas do Android |
 | **Android SDK** | Em `C:\Android\Sdk` |
-| **AVD** | Emulador `Pixel_6_API_35` (validado em 05/11/2026) |
+| **AVD** | Emulador `Pixel_6_API_35` (validado em 13/11/2026) |
 | **Modo de Desenvolvedor (Windows)** | Necessário para plugins Flutter no Windows (`start ms-settings:developers`) |
 | **Node.js** | Apenas para gerar relatórios Word em `docs/` (`cd docs && npm install && npm run relatorio`) |
 | **Git / gh** | Controle de versão e PRs no GitHub |

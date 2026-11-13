@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/colors.dart';
 import '../../core/format/date_time_br.dart';
 import '../../core/format/money.dart';
 import '../../data/models/customer_order.dart';
@@ -69,40 +70,56 @@ class _OrdersPageState extends State<OrdersPage> {
             );
           }
           return RefreshIndicator(
+            color: Theme.of(context).colorScheme.primary,
             onRefresh: _refresh,
             child: ListView.separated(
               key: const Key('orders_list'),
               physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: orders.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final order = orders[index];
-                return ListTile(
+                final theme = Theme.of(context);
+                return Material(
                   key: Key('order_tile_${order.id}'),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  title: Text('Pedido #${order.id}'),
-                  subtitle: Text(
-                    '${formatDateTimeBr(order.createdAt)} · ${order.statusLabel}',
-                  ),
-                  trailing: Text(
-                    formatBrl(order.totalCents),
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => OrderDetailPage(
-                          repository: widget.repository,
-                          userId: widget.userId,
-                          orderId: order.id,
-                        ),
+                  color: AppColors.surfaceContainer,
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    title: Text('Pedido #${order.id}'),
+                    subtitle: Text(
+                      '${formatDateTimeBr(order.createdAt)} · '
+                      '${order.statusLabel}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    );
-                  },
+                    ),
+                    trailing: Text(
+                      formatBrl(order.totalCents),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => OrderDetailPage(
+                            repository: widget.repository,
+                            userId: widget.userId,
+                            orderId: order.id,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),

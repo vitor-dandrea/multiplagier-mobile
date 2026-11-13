@@ -24,6 +24,8 @@ void main() {
       'created_at': '2026-10-23T18:00:00.000Z',
       'status': orderStatusPending,
       'total_cents': 18990,
+      'payment_method': 'card',
+      'payment_last4': '4242',
     });
     final item = OrderItem.fromRow({
       'product_id': 2,
@@ -34,6 +36,7 @@ void main() {
 
     expect(summary.statusLabel, 'Pendente');
     expect(summary.totalCents, 18990);
+    expect(summary.paymentLabel, 'Cartão •••• 4242');
     expect(item.lineTotalCents, 18990);
     expect(orderStatusLabel('shipped'), 'Em processamento');
   });

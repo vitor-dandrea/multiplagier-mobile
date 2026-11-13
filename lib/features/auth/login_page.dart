@@ -151,10 +151,13 @@ class _LoginPageState extends State<LoginPage> {
             key: const Key('login_submit'),
             onPressed: busy ? null : _submit,
             child: busy
-                ? const SizedBox(
+                ? SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.onPrimary,
+                    ),
                   )
                 : const Text('Entrar'),
           ),

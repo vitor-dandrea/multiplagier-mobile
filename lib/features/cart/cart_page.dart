@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/cart_line.dart';
 import '../../data/repositories/order_repository.dart';
-import '../orders/order_detail_page.dart';
+import '../auth/auth_controller.dart';
+import '../payment/payment_page.dart';
 import 'cart_controller.dart';
 
 class CartPage extends StatelessWidget {
@@ -11,48 +13,23 @@ class CartPage extends StatelessWidget {
     super.key,
     required this.controller,
     required this.orderRepository,
+    required this.authController,
     required this.onOrderPlaced,
   });
 
   final CartController controller;
   final OrderRepository orderRepository;
+  final AuthController authController;
   final VoidCallback onOrderPlaced;
 
   Future<void> _checkout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        key: const Key('confirm_order_dialog'),
-        title: const Text('Finalizar pedido'),
-        content: Text(
-          'Confirmar a compra de ${formatBrl(controller.totalCents)}?',
-        ),
-        actions: [
-          TextButton(
-            key: const Key('confirm_order_cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            key: const Key('confirm_order'),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    final orderId = await controller.checkout();
-    if (!context.mounted || orderId == null) return;
-
-    onOrderPlaced();
-    await Navigator.of(context).pushReplacement(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => OrderDetailPage(
-          repository: orderRepository,
-          userId: controller.userId,
-          orderId: orderId,
+        builder: (_) => PaymentPage(
+          controller: controller,
+          orderRepository: orderRepository,
+          authController: authController,
+          onOrderPlaced: onOrderPlaced,
         ),
       ),
     );
@@ -89,8 +66,9 @@ class CartPage extends StatelessWidget {
               Expanded(
                 child: ListView.separated(
                   key: const Key('cart_list'),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   itemCount: controller.lines.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) => _CartTile(
                     line: controller.lines[index],
                     enabled: !controller.busy,
@@ -142,56 +120,70 @@ class _CartTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final warning = !line.canCheckout;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(line.name, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(formatBrl(line.unitPriceCents)),
-          if (warning)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                line.isActive ? 'Estoque insuficiente' : 'Indisponível',
-                style: TextStyle(color: theme.colorScheme.error),
+    return Material(
+      color: AppColors.surfaceContainer,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(line.name, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+              formatBrl(line.unitPriceCents),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
             ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              IconButton(
-                key: Key('cart_dec_${line.productId}'),
-                tooltip: line.quantity <= 1 ? 'Remover' : 'Diminuir',
-                onPressed: enabled ? onDecrease : null,
-                icon: Icon(
-                  line.quantity <= 1 ? Icons.delete_outline : Icons.remove,
+            if (warning)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  line.isActive ? 'Estoque insuficiente' : 'Indisponível',
+                  style: TextStyle(
+                    color: scheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              Text(
-                '${line.quantity}',
-                key: Key('cart_qty_${line.productId}'),
-                style: theme.textTheme.titleMedium,
-              ),
-              IconButton(
-                key: Key('cart_inc_${line.productId}'),
-                tooltip: 'Aumentar',
-                onPressed: enabled ? onIncrease : null,
-                icon: const Icon(Icons.add),
-              ),
-              const Spacer(),
-              Text(
-                formatBrl(line.lineTotalCents),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                IconButton(
+                  key: Key('cart_dec_${line.productId}'),
+                  tooltip: line.quantity <= 1 ? 'Remover' : 'Diminuir',
+                  onPressed: enabled ? onDecrease : null,
+                  icon: Icon(
+                    line.quantity <= 1 ? Icons.delete_outline : Icons.remove,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                Text(
+                  '${line.quantity}',
+                  key: Key('cart_qty_${line.productId}'),
+                  style: theme.textTheme.titleMedium,
+                ),
+                IconButton(
+                  key: Key('cart_inc_${line.productId}'),
+                  tooltip: 'Aumentar',
+                  onPressed: enabled ? onIncrease : null,
+                  icon: const Icon(Icons.add),
+                ),
+                const Spacer(),
+                Text(
+                  formatBrl(line.lineTotalCents),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,7 +205,9 @@ class _CheckoutBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Material(
+      color: AppColors.surfaceContainer,
       elevation: 8,
       child: SafeArea(
         child: Padding(
@@ -227,6 +221,7 @@ class _CheckoutBar extends StatelessWidget {
                 key: const Key('cart_total'),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
+                  color: scheme.primary,
                 ),
               ),
               if (errorMessage != null) ...[
@@ -234,7 +229,7 @@ class _CheckoutBar extends StatelessWidget {
                 Text(
                   errorMessage!,
                   key: const Key('cart_error'),
-                  style: TextStyle(color: theme.colorScheme.error),
+                  style: TextStyle(color: scheme.error),
                 ),
               ],
               const SizedBox(height: 12),
@@ -242,10 +237,13 @@ class _CheckoutBar extends StatelessWidget {
                 key: const Key('cart_checkout'),
                 onPressed: busy ? null : onCheckout,
                 child: busy
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.onPrimary,
+                        ),
                       )
                     : const Text('Finalizar pedido'),
               ),

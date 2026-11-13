@@ -1,7 +1,9 @@
 import '../db/app_database.dart';
 import '../models/customer_order.dart';
+import '../models/payment_info.dart';
+import '../models/shipping_address.dart';
 
-enum PlaceOrderFailure { emptyCart, unavailable }
+enum PlaceOrderFailure { emptyCart, unavailable, missingAddress }
 
 class PlaceOrderOutcome {
   const PlaceOrderOutcome.success(this.order) : failure = null;
@@ -17,7 +19,7 @@ class PlaceOrderOutcome {
 /// A leitura filtra pelo usuário da sessão. Pedido de outra pessoa não
 /// devolve itens, totais nem o dono — o mesmo resultado de um id inexistente.
 abstract class OrderRepository {
-  Future<PlaceOrderOutcome> placeOrder(int userId);
+  Future<PlaceOrderOutcome> placeOrder(int userId, PaymentInfo payment);
 
   Future<List<OrderSummary>> listForUser(int userId);
 
@@ -40,9 +42,23 @@ class SqliteOrderRepository implements OrderRepository {
   final AppDatabase _database;
 
   @override
-  Future<PlaceOrderOutcome> placeOrder(int userId) async {
+  Future<PlaceOrderOutcome> placeOrder(int userId, PaymentInfo payment) async {
     try {
       final order = await _database.db.transaction<OrderDetail>((txn) async {
+        final userRows = await txn.query(
+          'users',
+          where: 'id = ?',
+          whereArgs: [userId],
+          limit: 1,
+        );
+        if (userRows.isEmpty) {
+          throw const _PlaceOrderAbort(PlaceOrderFailure.missingAddress);
+        }
+        final shipping = ShippingAddress.fromUserRow(userRows.single);
+        if (!shipping.isComplete) {
+          throw const _PlaceOrderAbort(PlaceOrderFailure.missingAddress);
+        }
+
         final rows = await txn.rawQuery(
           '''
           SELECT ci.product_id, ci.quantity, p.name, p.price_cents,
@@ -84,6 +100,9 @@ class SqliteOrderRepository implements OrderRepository {
           'status': orderStatusPending,
           'total_cents': total,
           'created_at': createdAt.toIso8601String(),
+          'payment_method': payment.method.storageValue,
+          'payment_last4': payment.last4,
+          ...shipping.toOrderColumns(),
         });
 
         for (final item in items) {
@@ -120,6 +139,9 @@ class SqliteOrderRepository implements OrderRepository {
           status: orderStatusPending,
           totalCents: total,
           items: items,
+          paymentMethod: payment.method,
+          paymentLast4: payment.last4,
+          shippingAddress: shipping,
         );
       });
       return PlaceOrderOutcome.success(order);
@@ -132,7 +154,14 @@ class SqliteOrderRepository implements OrderRepository {
   Future<List<OrderSummary>> listForUser(int userId) async {
     final rows = await _database.db.query(
       'orders',
-      columns: ['id', 'created_at', 'status', 'total_cents'],
+      columns: [
+        'id',
+        'created_at',
+        'status',
+        'total_cents',
+        'payment_method',
+        'payment_last4',
+      ],
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'created_at DESC, id DESC',
@@ -162,13 +191,20 @@ class SqliteOrderRepository implements OrderRepository {
       whereArgs: [orderId],
       orderBy: 'id ASC',
     );
+    final row = rows.single;
+    final shipping = ShippingAddress.fromOrderRow(row);
     return OrderDetail(
-      id: rows.single['id'] as int,
+      id: row['id'] as int,
       userId: ownerId,
-      createdAt: DateTime.parse(rows.single['created_at'] as String),
-      status: rows.single['status'] as String,
-      totalCents: rows.single['total_cents'] as int,
+      createdAt: DateTime.parse(row['created_at'] as String),
+      status: row['status'] as String,
+      totalCents: row['total_cents'] as int,
       items: itemRows.map(OrderItem.fromRow).toList(),
+      paymentMethod: PaymentMethodStorage.tryParse(
+        row['payment_method'] as String?,
+      ),
+      paymentLast4: row['payment_last4'] as String?,
+      shippingAddress: shipping.isComplete ? shipping : null,
     );
   }
 

@@ -1,7 +1,7 @@
-// Gera as capturas de tela usadas como evidência no relatório de status.
+// Gera as capturas da galeria do README.
 //
 // Renderiza as telas reais do app (SQLite real em memória, tema real) em
-// tamanho de celular e grava PNGs em docs/evidencias/.
+// tamanho de celular e grava PNGs em docs/evidencias/galeria/.
 //
 // Uso (a partir da raiz do projeto):
 //   flutter test tool/screenshots/capture_screens_test.dart
@@ -25,10 +25,11 @@ import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/catalog_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
+import 'package:multiplagier_mobile/features/catalog/product_image.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 const _fontsDir = r'C:\flutter\bin\cache\artifacts\material_fonts';
-const _outDir = 'docs/evidencias';
+const _outDir = 'docs/evidencias/galeria';
 
 class _MemorySession implements SessionStore {
   int? id;
@@ -152,7 +153,24 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('login_submit')));
     await _pumpUntilFound(tester, find.byKey(const Key('catalog_list')));
+    // Precache fotos offline para a galeria (Image.asset ainda não decodificado).
+    await tester.runAsync(() async {
+      final ctx = tester.element(find.byType(MaterialApp));
+      for (final asset in ProductImage.assetsByName.values) {
+        await precacheImage(AssetImage(asset), ctx);
+      }
+    });
+    await tester.pumpAndSettle();
     await capture('03-catalogo');
+
+    // Conta / endereço
+    await tester.tap(find.byKey(const Key('account_button')));
+    await _pumpUntilFound(tester, find.byKey(const Key('account_save')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await capture('09-conta');
+    await tester.pageBack();
+    await tester.pump(const Duration(milliseconds: 500));
+    await _pumpUntilFound(tester, find.byKey(const Key('catalog_list')));
 
     // 4. Detalhe do produto
     await tester.tap(find.byKey(const Key('product_tile_1')));
@@ -174,14 +192,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await capture('06-carrinho');
 
-    // 7. Pedido confirmado
+    // 7. Pagamento + pedido confirmado
     await tester.ensureVisible(find.byKey(const Key('cart_checkout')));
     await tester.tap(find.byKey(const Key('cart_checkout')));
-    await _pumpUntilFound(tester, find.byKey(const Key('confirm_order')));
-    await tester.tap(find.byKey(const Key('confirm_order')));
+    await _pumpUntilFound(tester, find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await capture('07-pagamento');
+    await tester.tap(find.byKey(const Key('payment_method_pix')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 700));
     await _pumpUntilFound(tester, find.byKey(const Key('order_status')));
     await tester.pump(const Duration(milliseconds: 500));
-    await capture('07-pedido');
+    await capture('08-pedido');
 
     await tester.runAsync(() => database.close());
   });

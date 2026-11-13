@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
+import 'product_image.dart';
+import 'product_placeholder.dart';
 
 /// Detalhe de um produto ativo (US-004). Produto inexistente ou inativo
 /// mostra "não encontrado", sem expor detalhes internos.
@@ -117,21 +120,17 @@ class _ProductDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final status = AppStatusColors.of(context);
     final available = product.isAvailable;
 
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Container(
-          height: 180,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.devices_other,
-            size: 72,
-            color: theme.colorScheme.onPrimaryContainer,
+        SizedBox(
+          height: 200,
+          child: ProductImage(
+            product: product,
+            size: ProductPlaceholderSize.hero,
           ),
         ),
         const SizedBox(height: 24),
@@ -154,8 +153,8 @@ class _ProductDetail extends StatelessWidget {
           available ? 'Em estoque' : 'Indisponível',
           key: const Key('detail_availability'),
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: available ? Colors.green.shade800 : theme.colorScheme.error,
+            fontWeight: FontWeight.w700,
+            color: available ? status.success : theme.colorScheme.error,
           ),
         ),
         const SizedBox(height: 24),
@@ -164,7 +163,10 @@ class _ProductDetail extends StatelessWidget {
         Text(
           product.description,
           key: const Key('detail_description'),
-          style: theme.textTheme.bodyLarge,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.45,
+          ),
         ),
       ],
     );
@@ -189,7 +191,9 @@ class _AddToCartBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final status = AppStatusColors.of(context);
     return Material(
+      color: AppColors.surfaceContainer,
       elevation: 8,
       child: SafeArea(
         child: Padding(
@@ -203,9 +207,10 @@ class _AddToCartBar extends StatelessWidget {
                   feedback!,
                   key: const Key('add_to_cart_feedback'),
                   style: TextStyle(
+                    fontWeight: FontWeight.w600,
                     color: feedbackIsError
                         ? theme.colorScheme.error
-                        : Colors.green.shade800,
+                        : status.success,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -223,7 +228,6 @@ class _AddToCartBar extends StatelessWidget {
     );
   }
 }
-
 class _Message extends StatelessWidget {
   const _Message({super.key, required this.text});
 

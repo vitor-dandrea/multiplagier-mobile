@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/security/login_throttle.dart';
 import '../../core/session/session_store.dart';
 import '../../core/validation/input_rules.dart';
+import '../../data/models/shipping_address.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -25,6 +26,11 @@ class AuthController extends ChangeNotifier {
       'Não foi possível criar a conta. Tente novamente.';
   static const tooManyAttemptsMessage =
       'Muitas tentativas. Aguarde 1 minuto e tente novamente.';
+  static const profileSavedMessage = 'Dados salvos.';
+  static const unexpectedProfileMessage =
+      'Não foi possível salvar. Tente novamente.';
+  static const invalidAddressMessage =
+      'Verifique o endereço e tente novamente.';
 
   final AuthRepository _repository;
   final SessionStore _sessionStore;
@@ -128,10 +134,59 @@ class AuthController extends ChangeNotifier {
     _setSession(null);
   }
 
+  /// Atualiza nome e endereço do usuário autenticado.
+  Future<bool> updateProfile({
+    required String name,
+    required ShippingAddress address,
+  }) async {
+    final current = _user;
+    if (current == null) {
+      _errorMessage = unexpectedProfileMessage;
+      notifyListeners();
+      return false;
+    }
+
+    _busy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final outcome = await _repository.updateProfile(
+        userId: current.id,
+        name: name,
+        address: address,
+      );
+      final user = outcome.user;
+      if (user == null) {
+        _errorMessage = _profileMessage(outcome.failure);
+        return false;
+      }
+      _setSession(user);
+      return true;
+    } catch (_) {
+      _errorMessage = unexpectedProfileMessage;
+      return false;
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+  }
+
   void clearError() {
     if (_errorMessage == null) return;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  String _profileMessage(ProfileUpdateFailure? failure) {
+    switch (failure) {
+      case ProfileUpdateFailure.invalidName:
+        return InputRules.invalidNameMessage;
+      case ProfileUpdateFailure.invalidAddress:
+        return invalidAddressMessage;
+      case ProfileUpdateFailure.notFound:
+      case null:
+        return unexpectedProfileMessage;
+    }
   }
 
   String _registrationMessage(RegistrationFailure? failure) {

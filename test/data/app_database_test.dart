@@ -167,6 +167,12 @@ void main() {
         expect(tables.map((t) => t['name']), contains('cart_items'));
         expect(tables.map((t) => t['name']), contains('orders'));
 
+        final orderCols = await upgraded.db.rawQuery('PRAGMA table_info(orders)');
+        expect(
+          orderCols.map((c) => c['name']),
+          containsAll(['payment_method', 'payment_last4']),
+        );
+
         final products = await upgraded.db.query('products');
         expect(products.single['category'], 'Outros');
 

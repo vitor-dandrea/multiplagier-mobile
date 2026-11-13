@@ -86,8 +86,38 @@ class _OrderBody extends StatelessWidget {
           key: const Key('order_status'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
+            color: theme.colorScheme.tertiary,
           ),
         ),
+        if (order.paymentLabel != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Pagamento: ${order.paymentLabel}',
+            key: const Key('order_payment'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+        if (order.shippingAddress != null) ...[
+          const SizedBox(height: 16),
+          Text('Entrega', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          for (final line in order.shippingAddress!.formattedLines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                line,
+                key: line == order.shippingAddress!.formattedLines.first
+                    ? const Key('order_shipping')
+                    : null,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+        ],
         const SizedBox(height: 24),
         Text('Itens', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -98,8 +128,16 @@ class _OrderBody extends StatelessWidget {
             title: Text(item.productName),
             subtitle: Text(
               '${item.quantity} × ${formatBrl(item.unitPriceCents)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            trailing: Text(formatBrl(item.lineTotalCents)),
+            trailing: Text(
+              formatBrl(item.lineTotalCents),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           const Divider(height: 1),
         ],

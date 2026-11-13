@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
 import 'catalog_filter.dart';
+import 'product_image.dart';
+import 'product_placeholder.dart';
 
 /// Lista de produtos ativos (US-003) com busca e filtro por categoria (US-009).
 class ProductListPage extends StatefulWidget {
@@ -156,12 +159,20 @@ class _ProductListPageState extends State<ProductListPage> {
                       message: ProductListPage.noMatchMessage,
                     )
                   : RefreshIndicator(
+                      color: Theme.of(context).colorScheme.primary,
                       onRefresh: _refresh,
-                      child: ListView.separated(
+                      child: GridView.builder(
                         key: const Key('catalog_list'),
                         physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 0.58,
+                        ),
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) => _ProductTile(
                           product: visible[index],
                           onTap: () => widget.onProductTap(visible[index]),
@@ -185,34 +196,68 @@ class _ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final status = AppStatusColors.of(context);
     final available = product.isAvailable;
 
-    return ListTile(
+    return Material(
       key: Key('product_tile_${product.id}'),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primaryContainer,
-        foregroundColor: theme.colorScheme.onPrimaryContainer,
-        child: const Icon(Icons.devices_other),
-      ),
-      title: Text(
-        product.name,
-        style: theme.textTheme.titleMedium,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        '${product.category} · ${available ? 'Em estoque' : 'Indisponível'}',
-        style: TextStyle(
-          color: available ? Colors.green.shade800 : theme.colorScheme.error,
-        ),
-      ),
-      trailing: Text(
-        formatBrl(product.priceCents),
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.primary,
+      color: AppColors.surfaceContainer,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 5,
+              child: ProductImage(
+                product: product,
+                size: ProductPlaceholderSize.tile,
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      available ? 'Em estoque' : 'Indisponível',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: available ? status.success : scheme.error,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Text(
+                      formatBrl(product.priceCents),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

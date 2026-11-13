@@ -1,0 +1,125 @@
+PROMPT — Redesign visual do Multiplagier Mobile (Flutter)
+
+================================================================================
+CONTEXTO DO PROJETO (obrigatório)
+================================================================================
+
+Você vai atualizar a UI do aplicativo acadêmico **Multiplagier Mobile**:
+- Stack: Flutter / Dart 3, Material 3 já habilitado (`useMaterial3: true`)
+- Persistência: SQLite local (sqflite); **sem API web** nesta etapa
+- Domínio: e-commerce de eletrônicos (catálogo, conta, carrinho, pedidos)
+- Repo / estrutura relevante:
+  - `lib/core/theme.dart` — tema atual (seed azul `#0F4C81`)
+  - `lib/features/auth/` — login, cadastro, BrandHeader
+  - `lib/features/catalog/` — lista e detalhe
+  - `lib/features/cart/`, `lib/features/orders/`, `lib/features/home/`
+  - `lib/core/security/`, repositórios e testes em `test/`
+
+Papel: UI/UX + Flutter sênior. Objetivo: elevar visual e usabilidade **sem** reescrever a arquitetura nem a lógica de negócio/segurança.
+
+================================================================================
+ANEXO OBRIGATÓRIO
+================================================================================
+
+Junto a este prompt será anexada uma **imagem de paleta / style guide de cores**.
+Trate essa imagem como fonte da identidade visual.
+
+1. Extraia da imagem os HEX principais (Primary, Neutrals, Alerts, Others).
+2. Mapeie para tokens Flutter (não CSS).
+3. Se houver divergência mínima entre o que você “vê” e a legenda da imagem, priorize os HEX legíveis na arte.
+
+Referência esperada da paleta anexada (validar na imagem):
+- Primary (lime):        #D7FC70
+- Success:               #29AE29
+- Warning:               #FFC62A
+- Error:                 #EF4444
+- Orange (accent):       #ED7615
+- Lavender (accent):     #6E3CF5
+- Sussie / Cyan:         #38E1F1
+- Blue Jeans:            #0082FF
+- Neutrals: escala de cinzas da imagem (fundos escuros → texto claro / superfícies)
+
+A atmosfera é **dark + acento neon lime**, alto contraste, look moderno de product UI — não o azul acadêmico atual.
+
+================================================================================
+RESTRIÇÕES (não negociar)
+================================================================================
+
+- NÃO migrar para web/CSS/React. Só Flutter.
+- NÃO alterar regras de autenticação, PBKDF2, sessão (só id), SEC-001, SEC-003,
+  validação de senha, mensagens genéricas de login, nem schema SQLite.
+- NÃO trocar repositórios por API / Unsplash / Picsum como dependência obrigatória
+  de runtime (app precisa funcionar offline).
+- NÃO quebrar keys de teste (`Key('login_email')`, etc.) nem fluxos cobertos em `test/`.
+- Preferir mudanças em tema + widgets de apresentação; controllers/repositórios só
+  se inevitável para UI (ex.: passar ColorScheme).
+- Manter `flutter analyze` limpo e `flutter test` passando.
+
+================================================================================
+O QUE FAZER
+================================================================================
+
+### 1. Tokens e tema Flutter
+- Criar (ou evoluir) tokens em Dart a partir da paleta anexada, por exemplo em
+  `lib/core/theme.dart` (e arquivo de cores dedicado se ficar limpo):
+  - primary / onPrimary
+  - secondary / tertiary (usar Blue Jeans / Cyan / Lavender com parcimônia)
+  - surface / surfaceContainer / background (neutros escuros)
+  - onSurface / onSurfaceVariant (texto legível WCAG AA no dark)
+  - error / onError (#EF4444)
+  - success / warning (podem ser `Color` extras + ThemeExtension se necessário)
+- Substituir `ColorScheme.fromSeed(seedColor: azul)` por um `ColorScheme` dark
+  coerente com o lime `#D7FC70` como marca/CTA principal.
+- Atualizar AppBar, botões (Filled/Outlined), inputs, SnackBars, chips de categoria,
+  badges do carrinho, BrandHeader (gradiente alinhado à nova marca).
+
+### 2. Material Design 3
+- Manter M3: elevação tonal, radius consistente (ex. 12–16), tipografia com
+  hierarquia clara (display/title/body/label).
+- Espaçamento em escala 4/8.
+- Estados: default, pressed, disabled, error de formulário — claros no dark theme.
+- Micro-interações leves (já existe animação no BrandHeader; alinhar duração/curva).
+
+### 3. Catálogo e imagens
+- Melhorar visual da lista/detalhe (cards ou tiles mais “produto”, preço e estoque
+  com hierarquia forte).
+- Como ainda não há fotos reais obrigatórias: placeholders elegantes (gradiente /
+  ícone de categoria / iniciais) usando a paleta — **sem** depender de rede.
+- Se no futuro houver URL de imagem, preparar widget com fallback `onError` para
+  o mesmo placeholder (opcional, sem bloquear offline).
+
+### 4. Telas a cobrir (todas com a nova identidade)
+- Login e cadastro (BrandHeader + formulários)
+- Catálogo (busca, chips, lista)
+- Detalhe do produto
+- Carrinho e finalização
+- Lista/detalhe de pedidos
+- AppBar / logout / empty & error states
+
+### 5. Entregáveis na resposta / no PR
+1. Tabela HEX → token Flutter → onde aplica (CTA, superfície, texto, alerta).
+2. Resumo da direção de arte (1 parágrafo): dark + lime, tipografia, radius.
+3. Diff real no código (tema + widgets), não um app novo do zero.
+4. Confirmar testes: `flutter test` (e analyze) após as mudanças.
+
+================================================================================
+CRITÉRIOS DE ACEITE
+================================================================================
+
+- [ ] Paleta da imagem refletida no app (lime como marca/CTA principal, dark surfaces)
+- [ ] Contraste de texto/botões aceitável em fundo escuro
+- [ ] Nenhuma regressão de login/cadastro/carrinho/pedido/SEC-003
+- [ ] Offline: sem dependência de CDN de imagens
+- [ ] Código modular, no estilo do repo, commits preferencialmente `feat(ui):` / `style:`
+
+================================================================================
+COMO COMEÇAR
+================================================================================
+
+1. Ler `lib/core/theme.dart` e as páginas em `lib/features/**`.
+2. Extrair/confirmar HEX da imagem anexada.
+3. Implementar ColorScheme + ThemeData dark.
+4. Propagar para Auth → Home/Catalog → Cart/Orders.
+5. Rodar testes e ajustar.
+
+Fim do prompt.
