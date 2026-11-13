@@ -54,6 +54,20 @@ Definidas em `InputRules` (UI e repositório usam as mesmas funções):
 
 Isso reduz enumeração de contas válidas pela interface.
 
+## Checkout e perfil
+
+Pagamento e endereço **não** alteram PBKDF2 / SEC-001 / SEC-003; acrescentam estas regras:
+
+| Tema | Comportamento |
+|------|----------------|
+| Pagamento simulado | Formulário de cartão/Pix é só UX offline; **não** há gateway |
+| Dados de cartão | PAN e CVV **não** são persistidos; no pedido grava-se `payment_method` e, se cartão, só `payment_last4` |
+| Endereço no pedido | Snapshot `shipping_*` no `placeOrder` — histórico não muda se o perfil for editado depois |
+| Perfil | E-mail **somente leitura** nesta entrega; nome e endereço editáveis via `updateProfile` |
+| Validação de endereço | Regras locais (CEP 8 dígitos, UF 2 letras, campos obrigatórios); sem ViaCEP/rede |
+
+Checkout exige endereço completo no usuário; incompleto bloqueia a UI e falha tipada no repositório (`PlaceOrderFailure.missingAddress`).
+
 ## Outros pontos
 
 | Tema | Comportamento |
@@ -71,4 +85,6 @@ Isso reduz enumeração de contas válidas pela interface.
 | SEC-001 + `security_events` | `lib/data/repositories/order_repository.dart`, schema em `app_database.dart` |
 | SEC-003 | `lib/core/security/login_throttle.dart` |
 | Regras de senha | `lib/core/validation/input_rules.dart` |
+| Endereço | `lib/core/validation/address_rules.dart` |
+| Pagamento (persistência) | `lib/data/models/payment_info.dart`, `order_repository.dart` |
 | Mensagens genéricas | `lib/features/auth/auth_controller.dart` |
