@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multiplagier Mobile 2.1.0 — Projeto Interdisciplinar</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="deck">
+
+    <!-- 1. Intro -->
+    <section class="slide" id="s1" data-slide="1">
+      <p class="slide-label">Projeto Interdisciplinar</p>
+      <h1>Multiplagier Mobile</h1>
+      <p class="lead">
+        App de e-commerce Flutter com catálogo, carrinho, pagamento (cartão/Pix),
+        conta com endereço e pedidos — dados locais em SQLite.
+      </p>
+      <div class="meta">
+        <span><strong>Versão</strong> 2.1.0+2</span>
+        <span><strong>Instituição</strong> FATEC Mauá</span>
+        <span><strong>Ano</strong> 2026</span>
+      </div>
+      <div class="team">
+        <div class="chip">Marco <span>casos de uso</span></div>
+        <div class="chip">Vitor <span>arquitetura &amp; Git</span></div>
+        <div class="chip">Mauro <span>segurança &amp; testes</span></div>
+      </div>
+    </section>
+
+    <!-- 2. Marco — Auth UC -->
+    <section class="slide" id="s2" data-slide="2">
+      <p class="slide-label">Marco · Casos de uso</p>
+      <h2>Autenticação e sessão</h2>
+      <div class="uc-wrap">
+        <svg viewBox="0 0 920 420" role="img" aria-label="Diagrama de casos de uso: autenticação">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#b8c0ae"/>
+            </marker>
+          </defs>
+          <rect x="180" y="28" width="700" height="364" rx="18" fill="none" stroke="#3a3f35" stroke-width="2" stroke-dasharray="8 6"/>
+          <text x="530" y="58" text-anchor="middle" fill="#b8c0ae" font-size="14" font-family="Segoe UI,sans-serif">Sistema Multiplagier</text>
+
+          <!-- Actor -->
+          <g transform="translate(70,180)">
+            <circle cx="0" cy="-36" r="16" fill="none" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="-20" x2="0" y2="28" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="-24" y1="0" x2="24" y2="0" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="-20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <text x="0" y="82" text-anchor="middle" fill="#f2f5ec" font-size="15" font-weight="700" font-family="Segoe UI,sans-serif">Cliente</text>
+          </g>
+
+          <!-- Use cases -->
+          <ellipse cx="360" cy="120" rx="110" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="125" text-anchor="middle" fill="#f2f5ec" font-size="14" font-family="Segoe UI,sans-serif">Cadastrar conta</text>
+
+          <ellipse cx="360" cy="210" rx="110" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="215" text-anchor="middle" fill="#f2f5ec" font-size="14" font-family="Segoe UI,sans-serif">Fazer login</text>
+
+          <ellipse cx="360" cy="300" rx="110" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="305" text-anchor="middle" fill="#f2f5ec" font-size="14" font-family="Segoe UI,sans-serif">Fazer logout</text>
+
+          <ellipse cx="620" cy="120" rx="130" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="620" y="125" text-anchor="middle" fill="#f2f5ec" font-size="14" font-family="Segoe UI,sans-serif">Restaurar sessão</text>
+
+          <ellipse cx="620" cy="250" rx="140" ry="42" fill="#1c1f1a" stroke="#ef4444" stroke-width="2"/>
+          <text x="620" y="245" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Bloquear após 5 falhas</text>
+          <text x="620" y="263" text-anchor="middle" fill="#b8c0ae" font-size="12" font-family="Segoe UI,sans-serif">(SEC-003 · 30 s)</text>
+
+          <!-- Associations -->
+          <line x1="100" y1="190" x2="248" y2="120" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="200" x2="248" y2="210" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="210" x2="248" y2="300" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="175" x2="488" y2="120" stroke="#b8c0ae" stroke-width="1.5"/>
+
+          <!-- extend -->
+          <line x1="470" y1="210" x2="500" y2="250" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+          <text x="505" y="228" fill="#ef4444" font-size="11" font-family="Segoe UI,sans-serif">«extend»</text>
+        </svg>
+      </div>
+      <p class="legend">Ator Cliente · SEC-003 estende o login quando há tentativas inválidas consecutivas.</p>
+    </section>
+
+    <!-- 3. Marco — Compra UC -->
+    <section class="slide" id="s3" data-slide="3">
+      <p class="slide-label">Marco · Casos de uso</p>
+      <h2>Compra</h2>
+      <div class="uc-wrap">
+        <svg viewBox="0 0 960 440" role="img" aria-label="Diagrama de casos de uso: compra">
+          <rect x="160" y="24" width="760" height="392" rx="18" fill="none" stroke="#3a3f35" stroke-width="2" stroke-dasharray="8 6"/>
+          <text x="540" y="52" text-anchor="middle" fill="#b8c0ae" font-size="14" font-family="Segoe UI,sans-serif">Sistema Multiplagier</text>
+
+          <g transform="translate(70,200)">
+            <circle cx="0" cy="-36" r="16" fill="none" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="-20" x2="0" y2="28" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="-24" y1="0" x2="24" y2="0" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="-20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <text x="0" y="82" text-anchor="middle" fill="#f2f5ec" font-size="15" font-weight="700" font-family="Segoe UI,sans-serif">Cliente</text>
+          </g>
+
+          <ellipse cx="340" cy="110" rx="120" ry="34" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="340" y="115" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Buscar / filtrar produtos</text>
+
+          <ellipse cx="340" cy="200" rx="120" ry="34" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="340" y="205" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Ver detalhe do produto</text>
+
+          <ellipse cx="340" cy="290" rx="120" ry="34" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="340" y="295" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Gerenciar carrinho</text>
+
+          <ellipse cx="620" cy="160" rx="130" ry="38" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="620" y="157" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Pagar com cartão</text>
+          <text x="620" y="175" text-anchor="middle" fill="#b8c0ae" font-size="11" font-family="Segoe UI,sans-serif">(sem PAN/CVV)</text>
+
+          <ellipse cx="620" cy="260" rx="130" ry="34" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="620" y="265" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Pagar com Pix</text>
+
+          <ellipse cx="820" cy="210" rx="90" ry="48" fill="#1c1f1a" stroke="#a8c94a" stroke-width="2"/>
+          <text x="820" y="205" text-anchor="middle" fill="#f2f5ec" font-size="12" font-family="Segoe UI,sans-serif">Informar</text>
+          <text x="820" y="222" text-anchor="middle" fill="#f2f5ec" font-size="12" font-family="Segoe UI,sans-serif">endereço</text>
+
+          <line x1="100" y1="185" x2="218" y2="110" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="200" x2="218" y2="200" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="215" x2="218" y2="290" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="195" x2="488" y2="160" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="210" x2="488" y2="260" stroke="#b8c0ae" stroke-width="1.5"/>
+
+          <line x1="750" y1="160" x2="740" y2="195" stroke="#a8c94a" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line x1="750" y1="260" x2="740" y2="225" stroke="#a8c94a" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="735" y="198" fill="#a8c94a" font-size="11" font-family="Segoe UI,sans-serif">«include»</text>
+        </svg>
+      </div>
+      <p class="legend">Checkout exige endereço completo; pagamento não armazena dados sensíveis do cartão.</p>
+    </section>
+
+    <!-- 4. Marco — Conta e pedidos UC -->
+    <section class="slide" id="s4" data-slide="4">
+      <p class="slide-label">Marco · Casos de uso</p>
+      <h2>Conta e pedidos</h2>
+      <div class="uc-wrap">
+        <svg viewBox="0 0 920 420" role="img" aria-label="Diagrama de casos de uso: conta e pedidos">
+          <rect x="180" y="28" width="700" height="364" rx="18" fill="none" stroke="#3a3f35" stroke-width="2" stroke-dasharray="8 6"/>
+          <text x="530" y="58" text-anchor="middle" fill="#b8c0ae" font-size="14" font-family="Segoe UI,sans-serif">Sistema Multiplagier</text>
+
+          <g transform="translate(70,180)">
+            <circle cx="0" cy="-36" r="16" fill="none" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="-20" x2="0" y2="28" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="-24" y1="0" x2="24" y2="0" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="-20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <line x1="0" y1="28" x2="20" y2="58" stroke="#d7fc70" stroke-width="2.5"/>
+            <text x="0" y="82" text-anchor="middle" fill="#f2f5ec" font-size="15" font-weight="700" font-family="Segoe UI,sans-serif">Cliente</text>
+          </g>
+
+          <ellipse cx="380" cy="120" rx="125" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="380" y="125" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Editar perfil / endereço</text>
+
+          <ellipse cx="380" cy="220" rx="125" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="380" y="225" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Listar meus pedidos</text>
+
+          <ellipse cx="380" cy="320" rx="125" ry="36" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="380" y="325" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Abrir detalhe do pedido</text>
+
+          <ellipse cx="680" cy="320" rx="145" ry="42" fill="#1c1f1a" stroke="#ef4444" stroke-width="2"/>
+          <text x="680" y="315" text-anchor="middle" fill="#f2f5ec" font-size="13" font-family="Segoe UI,sans-serif">Pedido alheio → 404</text>
+          <text x="680" y="333" text-anchor="middle" fill="#b8c0ae" font-size="12" font-family="Segoe UI,sans-serif">(SEC-001)</text>
+
+          <line x1="100" y1="180" x2="254" y2="120" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="200" x2="254" y2="220" stroke="#b8c0ae" stroke-width="1.5"/>
+          <line x1="100" y1="220" x2="254" y2="320" stroke="#b8c0ae" stroke-width="1.5"/>
+
+          <line x1="505" y1="320" x2="533" y2="320" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="520" y="308" fill="#ef4444" font-size="11" font-family="Segoe UI,sans-serif">«extend»</text>
+        </svg>
+      </div>
+      <p class="legend">SEC-001: pedido de outro usuário responde como não encontrado (sem vazar existência).</p>
+    </section>
+
+    <!-- 5. Vitor — Stack -->
+    <section class="slide" id="s5" data-slide="5">
+      <p class="slide-label">Vitor · Stack</p>
+      <h2>Linguagens e ferramentas</h2>
+      <ul class="stack">
+        <li>
+          <strong>Dart 3.13.5 · Flutter 3.47.6</strong>
+          <p>UI nativa multiplataforma; app Android via AVD / dispositivo físico.</p>
+        </li>
+        <li>
+          <strong>sqflite ^2.4.4 · shared_preferences ^2.5.5 · crypto ^3.0.7</strong>
+          <p>Persistência local SQLite, sessão id-only e hash PBKDF2 da senha.</p>
+        </li>
+        <li>
+          <strong>Android Studio · Git · GitHub CLI (gh)</strong>
+          <p>Emulador, branches/PRs e revisão no fluxo do repositório.</p>
+        </li>
+        <li>
+          <strong>App 2.1.0+2</strong>
+          <p>Release SemVer em main; apresentação fora do runtime Flutter.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 6. Vitor — Arquitetura -->
+    <section class="slide" id="s6" data-slide="6">
+      <p class="slide-label">Vitor · Arquitetura</p>
+      <h2>Diagrama de camadas</h2>
+      <div class="arch">
+        <svg viewBox="0 0 720 360" role="img" aria-label="Arquitetura em camadas">
+          <rect x="40" y="20" width="640" height="70" rx="12" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="50" text-anchor="middle" fill="#d7fc70" font-size="18" font-weight="700" font-family="Segoe UI,sans-serif">features/</text>
+          <text x="360" y="72" text-anchor="middle" fill="#b8c0ae" font-size="13" font-family="Segoe UI,sans-serif">UI · pages · controllers (ChangeNotifier)</text>
+
+          <text x="360" y="110" text-anchor="middle" fill="#d7fc70" font-size="22">↓</text>
+
+          <rect x="40" y="125" width="640" height="70" rx="12" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="155" text-anchor="middle" fill="#d7fc70" font-size="18" font-weight="700" font-family="Segoe UI,sans-serif">data/</text>
+          <text x="360" y="177" text-anchor="middle" fill="#b8c0ae" font-size="13" font-family="Segoe UI,sans-serif">repositories · models · db (SQLite)</text>
+
+          <text x="360" y="215" text-anchor="middle" fill="#d7fc70" font-size="22">↓</text>
+
+          <rect x="40" y="230" width="640" height="70" rx="12" fill="#1c1f1a" stroke="#d7fc70" stroke-width="2"/>
+          <text x="360" y="260" text-anchor="middle" fill="#d7fc70" font-size="18" font-weight="700" font-family="Segoe UI,sans-serif">core/</text>
+          <text x="360" y="282" text-anchor="middle" fill="#b8c0ae" font-size="13" font-family="Segoe UI,sans-serif">tema · validação · segurança (PBKDF2)</text>
+
+          <text x="360" y="330" text-anchor="middle" fill="#b8c0ae" font-size="13" font-family="Segoe UI,sans-serif">Dependência aponta para dentro · UI não fala com SQLite direto</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 7. Vitor — Camadas -->
+    <section class="slide" id="s7" data-slide="7">
+      <p class="slide-label">Vitor · Camadas</p>
+      <h2>O que cada camada faz</h2>
+      <div class="layers">
+        <div class="layer-card">
+          <h3>features/</h3>
+          <p>Telas e controllers: auth, catálogo, carrinho, pagamento, conta e pedidos. Observam estado e disparam ações do usuário.</p>
+        </div>
+        <div class="layer-card">
+          <h3>data/</h3>
+          <p>Repositórios e modelos; SQLite (schema v5), seed do catálogo e regras de isolamento por usuário.</p>
+        </div>
+        <div class="layer-card">
+          <h3>core/</h3>
+          <p>Paleta dark+lime, validação de endereço e hashing de senha — utilitários sem UI.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Vitor — Pattern -->
+    <section class="slide" id="s8" data-slide="8">
+      <p class="slide-label">Vitor · Design pattern</p>
+      <h2>Repository + Observer</h2>
+      <div class="flow">
+        <span class="box">UI</span>
+        <span class="arrow">→</span>
+        <span class="box">Controller</span>
+        <span class="arrow">→</span>
+        <span class="box">Repository</span>
+        <span class="arrow">→</span>
+        <span class="box">SQLite</span>
+      </div>
+      <ul class="bullets">
+        <li><strong>Repository</strong> — concentra acesso a dados; a UI não conhece SQL.</li>
+        <li><strong>Observer (ChangeNotifier)</strong> — controller notifica widgets quando o estado muda.</li>
+        <li>Fluxo típico: toque na tela → método no controller → repositório → banco → <code>notifyListeners()</code>.</li>
+      </ul>
+    </section>
+
+    <!-- 9. Vitor — Git -->
+    <section class="slide" id="s9" data-slide="9">
+      <p class="slide-label">Vitor · Versionamento</p>
+      <h2>Fluxo Git</h2>
+      <div class="stats">
+        <div class="stat"><div class="n">74</div><div class="t">commits em main</div></div>
+        <div class="stat"><div class="n">14</div><div class="t">branches remotas</div></div>
+        <div class="stat"><div class="n">2.1.0</div><div class="t">tag de release</div></div>
+      </div>
+      <ul class="bullets">
+        <li><strong>main</strong> — estável / releases; <strong>dev</strong> — integração.</li>
+        <li>Feature branches → PR → review → merge (sem push direto em main).</li>
+        <li>Commits semânticos: <code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>test:</code>.</li>
+      </ul>
+    </section>
+
+    <!-- 10. Mauro — Segurança -->
+    <section class="slide" id="s10" data-slide="10">
+      <p class="slide-label">Mauro · Segurança</p>
+      <h2>Controles implementados</h2>
+      <ul class="bullets">
+        <li><strong>PBKDF2</strong> — senha nunca em texto puro; salt + iterações via <code>crypto</code>.</li>
+        <li><strong>Sessão id-only</strong> — <code>shared_preferences</code> guarda só o user id, não a senha.</li>
+        <li><strong>SEC-001</strong> — pedido de outro usuário = “não encontrado”.</li>
+        <li><strong>SEC-003</strong> — 5 logins falhos → bloqueio de 30 s.</li>
+        <li><strong>Checkout</strong> — sem PAN/CVV; endereço completo snapshotado no pedido.</li>
+      </ul>
+    </section>
+
+    <!-- 11. Mauro — Testes -->
+    <section class="slide" id="s11" data-slide="11">
+      <p class="slide-label">Mauro · Testes</p>
+      <h2>Cobertura automatizada</h2>
+      <div class="stats">
+        <div class="stat"><div class="n">31</div><div class="t">arquivos em test/</div></div>
+        <div class="stat"><div class="n">127</div><div class="t">casos test / testWidgets</div></div>
+      </div>
+      <p class="lead" style="margin-bottom:0.75rem">Exemplo mais completo: <code>commerce_flow_test.dart</code></p>
+      <pre class="code">cadastra → mantém o carrinho → endereço → Pix
+→ pedido isolado por usuário (SEC-001)</pre>
+    </section>
+
+  </main>
+
+  <nav class="nav" aria-label="Navegação dos slides">
+    <button type="button" id="prev" aria-label="Slide anterior">← Anterior</button>
+    <span class="progress" id="progress">1 / 11</span>
+    <button type="button" id="next" aria-label="Próximo slide">Próximo →</button>
+  </nav>
+
+  <script src="slides.js"></script>
+</body>
+</html>
