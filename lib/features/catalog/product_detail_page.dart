@@ -4,6 +4,7 @@ import '../../core/colors.dart';
 import '../../core/format/money.dart';
 import '../../data/models/product.dart';
 import '../../data/repositories/catalog_repository.dart';
+import 'product_image.dart';
 import 'product_placeholder.dart';
 
 /// Detalhe de um produto ativo (US-004). Produto inexistente ou inativo
@@ -127,9 +128,8 @@ class _ProductDetail extends StatelessWidget {
       children: [
         SizedBox(
           height: 200,
-          child: ProductPlaceholder(
-            category: product.category,
-            name: product.name,
+          child: ProductImage(
+            product: product,
             size: ProductPlaceholderSize.hero,
           ),
         ),
