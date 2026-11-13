@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data/models/cart_line.dart';
+import '../../data/models/payment_info.dart';
 import '../../data/repositories/cart_repository.dart';
 import '../../data/repositories/order_repository.dart';
 
@@ -19,6 +20,8 @@ class CartController extends ChangeNotifier {
   static const emptyCartMessage = 'Seu carrinho está vazio.';
   static const unavailableCheckoutMessage =
       'Um ou mais itens não estão mais disponíveis.';
+  static const missingAddressMessage =
+      'Cadastre um endereço completo na sua conta para finalizar.';
   static const loadErrorMessage = 'Não foi possível carregar o carrinho.';
   static const unexpectedMessage =
       'Não foi possível concluir a operação. Tente novamente.';
@@ -86,7 +89,7 @@ class CartController extends ChangeNotifier {
   }
 
   /// Id do pedido criado, ou `null` se a compra não foi concluída.
-  Future<int?> checkout() async {
+  Future<int?> checkout(PaymentInfo payment) async {
     if (lines.isEmpty) {
       errorMessage = emptyCartMessage;
       notifyListeners();
@@ -97,7 +100,7 @@ class CartController extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      final outcome = await _orderRepository.placeOrder(userId);
+      final outcome = await _orderRepository.placeOrder(userId, payment);
       final order = outcome.order;
       if (order == null) {
         if (!_disposed) {
@@ -164,6 +167,8 @@ class CartController extends ChangeNotifier {
         return emptyCartMessage;
       case PlaceOrderFailure.unavailable:
         return unavailableCheckoutMessage;
+      case PlaceOrderFailure.missingAddress:
+        return missingAddressMessage;
       case null:
         return unexpectedMessage;
     }

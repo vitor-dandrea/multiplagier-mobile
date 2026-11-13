@@ -1,7 +1,19 @@
 import 'package:multiplagier_mobile/core/session/session_store.dart';
+import 'package:multiplagier_mobile/core/validation/address_rules.dart';
 import 'package:multiplagier_mobile/core/validation/input_rules.dart';
+import 'package:multiplagier_mobile/data/models/shipping_address.dart';
 import 'package:multiplagier_mobile/data/models/user.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
+
+const demoShippingAddress = ShippingAddress(
+  street: 'Rua das Flores',
+  number: '100',
+  complement: 'Apto 12',
+  district: 'Centro',
+  city: 'Mauá',
+  state: 'SP',
+  zip: '09310000',
+);
 
 class MemorySessionStore implements SessionStore {
   int? id;
@@ -19,7 +31,7 @@ class MemorySessionStore implements SessionStore {
 class _Account {
   _Account(this.user, this.password);
 
-  final User user;
+  User user;
   final String password;
 }
 
@@ -28,21 +40,30 @@ class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({
     this.email = 'cliente@multiplagier.local',
     this.password = 'Multiplagier@2026',
+    ShippingAddress? address,
   }) {
+    final initialAddress = address ?? demoShippingAddress;
     _accounts.add(
       _Account(
-        const User(
+        User(
           id: 1,
           name: 'Cliente Demo',
           email: 'cliente@multiplagier.local',
           role: 'customer',
+          address: initialAddress,
         ),
         password,
       ),
     );
     if (email != user.email) {
       _accounts[0] = _Account(
-        User(id: 1, name: 'Cliente Demo', email: email, role: 'customer'),
+        User(
+          id: 1,
+          name: 'Cliente Demo',
+          email: email,
+          role: 'customer',
+          address: initialAddress,
+        ),
         password,
       );
     }
@@ -52,14 +73,16 @@ class FakeAuthRepository implements AuthRepository {
   final String password;
   int registerCalls = 0;
   int authenticateCalls = 0;
+  int updateProfileCalls = 0;
   int _nextId = 2;
   final List<_Account> _accounts = [];
 
-  static const user = User(
+  static final user = User(
     id: 1,
     name: 'Cliente Demo',
     email: 'cliente@multiplagier.local',
     role: 'customer',
+    address: demoShippingAddress,
   );
 
   @override
@@ -120,5 +143,54 @@ class FakeAuthRepository implements AuthRepository {
       if (account.user.id == id) return account.user;
     }
     return null;
+  }
+
+  @override
+  Future<ProfileUpdateOutcome> updateProfile({
+    required int userId,
+    required String name,
+    required ShippingAddress address,
+  }) async {
+    updateProfileCalls++;
+    final trimmedName = name.trim();
+    if (!InputRules.isValidName(trimmedName)) {
+      return const ProfileUpdateOutcome.failure(
+        ProfileUpdateFailure.invalidName,
+      );
+    }
+    if (!_isValidAddress(address)) {
+      return const ProfileUpdateOutcome.failure(
+        ProfileUpdateFailure.invalidAddress,
+      );
+    }
+    for (final account in _accounts) {
+      if (account.user.id != userId) continue;
+      final updated = account.user.copyWith(
+        name: trimmedName,
+        address: ShippingAddress(
+          street: address.street.trim(),
+          number: address.number.trim(),
+          complement: address.complement?.trim().isEmpty ?? true
+              ? null
+              : address.complement?.trim(),
+          district: address.district.trim(),
+          city: address.city.trim(),
+          state: address.state.trim().toUpperCase(),
+          zip: AddressRules.digitsOnly(address.zip),
+        ),
+      );
+      account.user = updated;
+      return ProfileUpdateOutcome.success(updated);
+    }
+    return const ProfileUpdateOutcome.failure(ProfileUpdateFailure.notFound);
+  }
+
+  bool _isValidAddress(ShippingAddress address) {
+    return AddressRules.isNonEmpty(address.street) &&
+        AddressRules.isNonEmpty(address.number) &&
+        AddressRules.isNonEmpty(address.district) &&
+        AddressRules.isNonEmpty(address.city) &&
+        AddressRules.isValidState(address.state) &&
+        AddressRules.isValidZip(address.zip);
   }
 }

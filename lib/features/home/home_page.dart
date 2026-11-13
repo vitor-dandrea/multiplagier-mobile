@@ -6,6 +6,7 @@ import '../../data/models/user.dart';
 import '../../data/repositories/cart_repository.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../data/repositories/order_repository.dart';
+import '../account/account_page.dart';
 import '../auth/auth_controller.dart';
 import '../cart/cart_controller.dart';
 import '../cart/cart_page.dart';
@@ -68,6 +69,7 @@ class _HomePageState extends State<HomePage> {
         builder: (_) => CartPage(
           controller: _cart,
           orderRepository: widget.orderRepository,
+          authController: widget.authController,
           onOrderPlaced: () {
             if (mounted) setState(() => _catalogRevision++);
           },
@@ -87,6 +89,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _openAccount() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AccountPage(authController: widget.authController),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -95,6 +105,12 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Catálogo'),
         actions: [
+          IconButton(
+            key: const Key('account_button'),
+            tooltip: 'Minha conta',
+            icon: const Icon(Icons.person_outline),
+            onPressed: _openAccount,
+          ),
           IconButton(
             key: const Key('orders_button'),
             tooltip: 'Pedidos',
@@ -119,12 +135,6 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-          IconButton(
-            key: const Key('logout_button'),
-            tooltip: 'Sair',
-            icon: const Icon(Icons.logout),
-            onPressed: widget.authController.logout,
-          ),
         ],
       ),
       body: Column(
@@ -133,13 +143,20 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'Olá, ${widget.user.name}',
-                key: const Key('home_greeting'),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: ListenableBuilder(
+                listenable: widget.authController,
+                builder: (context, _) {
+                  final name =
+                      widget.authController.user?.name ?? widget.user.name;
+                  return Text(
+                    'Olá, $name',
+                    key: const Key('home_greeting'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                },
               ),
             ),
           ),

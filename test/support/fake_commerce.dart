@@ -1,7 +1,11 @@
 import 'package:multiplagier_mobile/data/models/cart_line.dart';
 import 'package:multiplagier_mobile/data/models/customer_order.dart';
+import 'package:multiplagier_mobile/data/models/payment_info.dart';
+import 'package:multiplagier_mobile/data/models/shipping_address.dart';
 import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
+
+import 'fakes.dart';
 
 class FakeCartRepository implements CartRepository {
   FakeCartRepository({List<CartLine>? lines, this.failListTimes = 0})
@@ -96,26 +100,39 @@ class FakeCartRepository implements CartRepository {
 }
 
 class FakeOrderRepository implements OrderRepository {
-  FakeOrderRepository({this.cart, List<OrderDetail>? orders})
-    : orders = orders ?? [];
+  FakeOrderRepository({
+    this.cart,
+    List<OrderDetail>? orders,
+    this.shippingAddress = demoShippingAddress,
+  }) : orders = orders ?? [];
 
   final FakeCartRepository? cart;
   final List<OrderDetail> orders;
+
+  /// Endereço do usuário no checkout; `null` simula perfil incompleto.
+  ShippingAddress? shippingAddress;
   bool throwOnPlace = false;
   bool throwOnList = false;
   bool throwOnFind = false;
   PlaceOrderFailure? failNext;
   int placeCalls = 0;
+  PaymentInfo? lastPayment;
   final List<int> deniedOrderIds = [];
   int _nextId = 1;
 
   @override
-  Future<PlaceOrderOutcome> placeOrder(int userId) async {
+  Future<PlaceOrderOutcome> placeOrder(int userId, PaymentInfo payment) async {
     placeCalls++;
+    lastPayment = payment;
     if (throwOnPlace) throw StateError('falha interna sensível');
     final failure = failNext;
     failNext = null;
     if (failure != null) return PlaceOrderOutcome.failure(failure);
+
+    final shipping = shippingAddress;
+    if (shipping == null || !shipping.isComplete) {
+      return const PlaceOrderOutcome.failure(PlaceOrderFailure.missingAddress);
+    }
 
     final source = cart?.lines ?? const <CartLine>[];
     if (source.isEmpty) {
@@ -142,6 +159,9 @@ class FakeOrderRepository implements OrderRepository {
       status: orderStatusPending,
       totalCents: total,
       items: items,
+      paymentMethod: payment.method,
+      paymentLast4: payment.last4,
+      shippingAddress: shipping,
     );
     orders.add(order);
     cart?.lines.clear();
@@ -159,6 +179,8 @@ class FakeOrderRepository implements OrderRepository {
             createdAt: order.createdAt,
             status: order.status,
             totalCents: order.totalCents,
+            paymentMethod: order.paymentMethod,
+            paymentLast4: order.paymentLast4,
           ),
     ];
   }

@@ -3,6 +3,7 @@ import 'package:multiplagier_mobile/core/security/login_throttle.dart';
 import 'package:multiplagier_mobile/core/security/password_hasher.dart';
 import 'package:multiplagier_mobile/data/db/app_database.dart';
 import 'package:multiplagier_mobile/data/db/seed.dart';
+import 'package:multiplagier_mobile/data/models/shipping_address.dart';
 import 'package:multiplagier_mobile/data/models/user.dart';
 import 'package:multiplagier_mobile/data/repositories/auth_repository.dart';
 import 'package:multiplagier_mobile/features/auth/auth_controller.dart';
@@ -23,6 +24,13 @@ class _ThrowingRepository implements AuthRepository {
     required String name,
     required String email,
     required String password,
+  }) => throw StateError('db offline');
+
+  @override
+  Future<ProfileUpdateOutcome> updateProfile({
+    required int userId,
+    required String name,
+    required ShippingAddress address,
   }) => throw StateError('db offline');
 }
 
@@ -129,6 +137,24 @@ void main() {
       );
       expect(await again.login(email, password), isTrue);
       expect(again.user?.name, 'Ana Silva');
+    });
+
+    test('updateProfile persiste e atualiza currentUser', () async {
+      await controller.login(demoUserEmail, demoUserPassword);
+      final ok = await controller.updateProfile(
+        name: 'Cliente Novo Nome',
+        address: const ShippingAddress(
+          street: 'Rua B',
+          number: '20',
+          district: 'Centro',
+          city: 'Mauá',
+          state: 'SP',
+          zip: '09310000',
+        ),
+      );
+      expect(ok, isTrue);
+      expect(controller.user?.name, 'Cliente Novo Nome');
+      expect(controller.user?.address?.street, 'Rua B');
     });
 
     test('e-mail duplicado é recusado sem criar sessão', () async {

@@ -99,7 +99,11 @@ void main() {
     await popToPrevious(tester);
     await pumpUntilFound(tester, find.byKey(const Key('cart_badge')));
 
-    await tester.tap(find.byKey(const Key('logout_button')));
+    await tester.tap(find.byKey(const Key('account_button')));
+    await pumpUntilFound(tester, find.byKey(const Key('account_logout')));
+    await tester.ensureVisible(find.byKey(const Key('account_logout')));
+    await tester.tap(find.byKey(const Key('account_logout')));
+    await tester.pumpAndSettle();
     await pumpUntilFound(tester, find.byKey(const Key('login_submit')));
     await tester.enterText(
       find.byKey(const Key('login_email')),
@@ -110,6 +114,30 @@ void main() {
       'Senha1234',
     );
     await tester.tap(find.byKey(const Key('login_submit')));
+    await pumpUntilFound(tester, find.byKey(const Key('cart_badge')));
+
+    await tester.tap(find.byKey(const Key('account_button')));
+    await pumpUntilFound(tester, find.byKey(const Key('account_save')));
+    Future<void> fillAccount(Key key, String value) async {
+      final finder = find.byKey(key);
+      await tester.scrollUntilVisible(
+        finder,
+        80,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(finder, value);
+    }
+
+    await fillAccount(const Key('account_zip'), '01001000');
+    await fillAccount(const Key('account_street'), 'Rua A');
+    await fillAccount(const Key('account_number'), '10');
+    await fillAccount(const Key('account_district'), 'Centro');
+    await fillAccount(const Key('account_city'), 'São Paulo');
+    await fillAccount(const Key('account_state'), 'SP');
+    await tester.ensureVisible(find.byKey(const Key('account_save')));
+    await tester.tap(find.byKey(const Key('account_save')));
+    await pumpUntilFound(tester, find.text(AuthController.profileSavedMessage));
+    await popToPrevious(tester);
     await pumpUntilFound(tester, find.byKey(const Key('cart_badge')));
 
     await tester.tap(find.byKey(const Key('cart_button')));
@@ -123,11 +151,16 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('cart_checkout')));
-    await pumpUntilFound(tester, find.byKey(const Key('confirm_order')));
-    await tester.tap(find.byKey(const Key('confirm_order')));
+    await pumpUntilFound(tester, find.byKey(const Key('payment_submit')));
+    expect(find.byKey(const Key('payment_shipping')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('payment_method_pix')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('payment_submit')));
+    await tester.pump(const Duration(milliseconds: 700));
     await pumpUntilFound(tester, find.byKey(const Key('order_status')));
     expect(find.text('Pendente'), findsOneWidget);
     expect(find.text('Pedido #1'), findsOneWidget);
+    expect(find.byKey(const Key('order_shipping')), findsOneWidget);
 
     await popToPrevious(tester);
     await pumpUntilFound(tester, find.byKey(const Key('catalog_list')));
@@ -137,8 +170,12 @@ void main() {
     await pumpUntilFound(tester, find.byKey(const Key('order_tile_1')));
 
     await popToPrevious(tester);
-    await pumpUntilFound(tester, find.byKey(const Key('logout_button')));
-    await tester.tap(find.byKey(const Key('logout_button')));
+    await pumpUntilFound(tester, find.byKey(const Key('account_button')));
+    await tester.tap(find.byKey(const Key('account_button')));
+    await pumpUntilFound(tester, find.byKey(const Key('account_logout')));
+    await tester.ensureVisible(find.byKey(const Key('account_logout')));
+    await tester.tap(find.byKey(const Key('account_logout')));
+    await tester.pumpAndSettle();
     await pumpUntilFound(tester, find.byKey(const Key('login_submit')));
 
     await tester.enterText(find.byKey(const Key('login_email')), demoUserEmail);

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplagier_mobile/data/models/cart_line.dart';
+import 'package:multiplagier_mobile/data/models/payment_info.dart';
 import 'package:multiplagier_mobile/data/repositories/cart_repository.dart';
 import 'package:multiplagier_mobile/data/repositories/order_repository.dart';
 import 'package:multiplagier_mobile/features/cart/cart_controller.dart';
@@ -71,7 +72,7 @@ void main() {
 
   test('checkout de carrinho vazio não cria pedido', () async {
     await controller.load();
-    expect(await controller.checkout(), isNull);
+    expect(await controller.checkout(const PaymentInfo.pix()), isNull);
     expect(controller.errorMessage, CartController.emptyCartMessage);
     expect(orders.placeCalls, 0);
   });
@@ -80,12 +81,13 @@ void main() {
     await controller.load();
     await controller.add(7, quantity: 2);
 
-    final id = await controller.checkout();
+    final id = await controller.checkout(const PaymentInfo.pix());
 
     expect(id, 1);
     expect(controller.itemCount, 0);
     expect(orders.orders.single.totalCents, 3000);
     expect(orders.orders.single.userId, 4);
+    expect(orders.lastPayment?.method, PaymentMethod.pix);
   });
 
   test(
@@ -95,7 +97,7 @@ void main() {
       await controller.add(7);
       orders.failNext = PlaceOrderFailure.unavailable;
 
-      expect(await controller.checkout(), isNull);
+      expect(await controller.checkout(const PaymentInfo.pix()), isNull);
       expect(controller.itemCount, 1);
       expect(
         controller.errorMessage,
@@ -109,7 +111,7 @@ void main() {
     await controller.add(7);
     orders.throwOnPlace = true;
 
-    expect(await controller.checkout(), isNull);
+    expect(await controller.checkout(const PaymentInfo.pix()), isNull);
     expect(controller.errorMessage, CartController.unexpectedMessage);
     expect(controller.errorMessage, isNot(contains('sensível')));
     expect(controller.itemCount, 1);
